@@ -94,6 +94,7 @@
     <div class="field"><label for="ad-pass">Password</label><input id="ad-pass" type="password" autocomplete="current-password" required></div>
     <button type="submit" class="ghost solid">Sign in</button>
     <p id="login-note" class="form-note" role="status" aria-live="polite"></p>
+    <button type="button" id="btn-forgot" style="background:none;border:0;color:var(--muted);font-size:.8rem;cursor:pointer;margin-top:.8rem;text-decoration:underline">Forgot password?</button>
   </form>
 </div>
 
@@ -126,6 +127,7 @@
       <button class="tab" data-tab="subscribers">Subscribers <span class="count" id="c-sub">0</span></button>
       <button class="tab" data-tab="heat">Activity &amp; Heat <span class="count" id="c-heat">0</span></button>
       <button class="tab" data-tab="investors">Investors <span class="count" id="c-inv">0</span></button>
+      <button class="tab" data-tab="team">Team <span class="count" id="c-team">0</span></button>
     </div>
 
     <!-- INQUIRIES -->
@@ -161,6 +163,23 @@
         </form>
       </div>
       <div class="card tablescroll"><div id="inv-box"></div></div>
+    </section>
+
+    <!-- TEAM / ADMINS -->
+    <section class="panel" data-panel="team">
+      <div class="toolrow"><h2>Team &amp; admins</h2><span class="sub" style="color:var(--muted);font-size:.8rem">People who can sign in to this dashboard</span></div>
+      <div class="card" style="padding:1.4rem 1.5rem;margin-bottom:1.5rem">
+        <form id="team-form" style="display:grid;gap:.8rem;max-width:640px">
+          <div class="two" style="display:grid;gap:.8rem;grid-template-columns:1fr 1fr">
+            <div class="field"><label for="tm-name">Name</label><input id="tm-name" type="text" placeholder="e.g. Cliff Graham"></div>
+            <div class="field"><label for="tm-email">Email</label><input id="tm-email" type="email" placeholder="cliff@example.com" required></div>
+          </div>
+          <button type="submit" class="ghost solid" style="justify-self:start">Add admin</button>
+          <p id="team-note" class="form-note" role="status" aria-live="polite"></p>
+        </form>
+        <p class="sub" style="color:var(--muted);font-size:.8rem;margin-top:.6rem">A temporary password is generated — copy it and send it to them. They can change it in-app with the <strong>Password</strong> button after signing in.</p>
+      </div>
+      <div class="card tablescroll"><div id="team-box"></div></div>
     </section>
   </div>
 </div>
@@ -264,6 +283,38 @@
       .finally(function () { btn.disabled = false; });
   });
 
+  // ---- add admin ----
+  $('#team-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email = $('#tm-email').value.trim(), name = $('#tm-name').value.trim();
+    if (!email) { note($('#team-note'), 'Enter an email.', 'err'); return; }
+    var btn = e.target.querySelector('button'); btn.disabled = true;
+    note($('#team-note'), 'Creating admin…');
+    callFn('admin-users', { action: 'invite', email: email, name: name }).then(function (res) {
+      if (res.ok && res.j.ok) {
+        note($('#team-note'), 'Admin created. Send them this temporary password →', 'ok');
+        window.prompt('Temporary password for ' + email + ' — copy and send it to them (they change it after signing in):', res.j.temp_password);
+        $('#team-form').reset(); loadAll();
+      } else { note($('#team-note'), 'Could not add: ' + (res.j.error || 'error'), 'err'); }
+    }).catch(function () { note($('#team-note'), 'Network error.', 'err'); })
+      .finally(function () { btn.disabled = false; });
+  });
+
+  // ---- forgot password (from login) ----
+  $('#btn-forgot').addEventListener('click', function () {
+    if (!CONFIGURED) { note($('#login-note'), 'Not connected yet.', 'err'); return; }
+    var email = ($('#ad-email').value || window.prompt('Enter your admin email to reset:') || '').trim();
+    if (!email) return;
+    note($('#login-note'), 'Sending reset email…');
+    fetch(SB + '/auth/v1/recover', {
+      method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email })
+    }).then(function (r) {
+      if (r.ok) note($('#login-note'), 'If email recovery is enabled, a reset link is on its way. Otherwise ask another admin to reset you (Admin → Team).', 'ok');
+      else note($('#login-note'), 'Email recovery isn’t set up. Ask another admin to reset your password from Admin → Team.', 'err');
+    }).catch(function () { note($('#login-note'), 'Ask another admin to reset you from Admin → Team.', 'err'); });
+  });
+
   // ---- tabs ----
   document.querySelectorAll('.tab').forEach(function (t) {
     t.addEventListener('click', function () {
@@ -309,6 +360,45 @@
       renderInvestors(rows || []);
       $('#c-inv').textContent = (rows || []).length;
     }).catch(fail);
+    // Team / admins
+    api('rpc/list_admins', { method: 'POST', body: '{}' }).then(handle).then(function (rows) {
+      renderTeam(rows || []);
+      $('#c-team').textContent = (rows || []).length;
+    }).catch(fail);
+  }
+
+  var FN = '/.netlify/functions/';
+  function callFn(name, payload) {
+    return fetch(FN + name, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (session && session.access_token) },
+      body: JSON.stringify(payload)
+    }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); });
+  }
+
+  function renderTeam(rows) {
+    var box = $('#team-box');
+    if (!rows.length) { box.innerHTML = '<div class="empty">No admins found.</div>'; return; }
+    var me = (session.user && session.user.email || '').toLowerCase();
+    box.innerHTML = '<table><thead><tr><th>Name</th><th>Email</th><th>Added</th><th></th></tr></thead><tbody>' +
+      rows.map(function (r) {
+        var isMe = (r.email || '').toLowerCase() === me;
+        return '<tr><td class="name">' + esc(r.full_name || '—') + (isMe ? ' <span class="pill contacted">you</span>' : '') + '</td>' +
+          '<td class="sub">' + esc(r.email || '') + '</td>' +
+          '<td class="sub">' + (r.created_at ? new Date(r.created_at).toLocaleDateString() : '—') + '</td>' +
+          '<td><button class="btn" data-reset="' + esc(r.email || '') + '" style="padding:.4em .8em">Reset password</button></td></tr>';
+      }).join('') + '</tbody></table>';
+    box.querySelectorAll('[data-reset]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (!window.confirm('Reset password for ' + btn.dataset.reset + '? A new temporary password will be shown.')) return;
+        btn.disabled = true; var o = btn.textContent; btn.textContent = 'Resetting…';
+        callFn('admin-users', { action: 'reset', email: btn.dataset.reset }).then(function (res) {
+          if (res.ok && res.j.ok) window.prompt('New temporary password for ' + btn.dataset.reset + ' — copy and send it to them:', res.j.temp_password);
+          else window.alert('Could not reset: ' + (res.j.error || 'error'));
+        }).catch(function () { window.alert('Network error.'); })
+          .finally(function () { btn.disabled = false; btn.textContent = o; });
+      });
+    });
   }
 
   function investUrl(token) {

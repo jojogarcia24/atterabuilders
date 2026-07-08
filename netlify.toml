@@ -23,6 +23,20 @@
   to = "/.netlify/functions/investor-deck"
   status = 200
 
+# Secured machine-to-machine API (shared secret) for minting/managing investor links.
+[[redirects]]
+  from = "/api/invest-create"
+  to = "/.netlify/functions/invest-api?action=create"
+  status = 200
+[[redirects]]
+  from = "/api/invest-revoke"
+  to = "/.netlify/functions/invest-api?action=revoke"
+  status = 200
+[[redirects]]
+  from = "/api/invest-list"
+  to = "/.netlify/functions/invest-api?action=list"
+  status = 200
+
 # SPA-friendly: serve the function at /.netlify/functions/track-engagement
 [[headers]]
   for = "/sw.js"
