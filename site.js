@@ -58,6 +58,20 @@
     el.className = 'form-note' + (kind ? ' ' + kind : '');
   }
 
+  /* ---- fire the lead to GoHighLevel (best-effort, non-blocking) ---- */
+  function sendToGHL(payload) {
+    if (!cfg.GHL_WEBHOOK_URL || /YOUR_/.test(cfg.GHL_WEBHOOK_URL)) return;
+    try {
+      fetch(cfg.GHL_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        mode: 'no-cors',
+        keepalive: true
+      }).catch(function () {});
+    } catch (_) {}
+  }
+
   /* ---- inquiry form ---- */
   var lead = document.getElementById('lead-form');
   if (lead) {
@@ -65,23 +79,41 @@
     lead.addEventListener('submit', function (e) {
       e.preventDefault();
       var fd = new FormData(lead);
+      var first = (fd.get('first_name') || '').toString().trim();
+      var last = (fd.get('last_name') || '').toString().trim();
+      var full = (first + ' ' + last).trim();
       var row = {
-        name: (fd.get('name') || '').toString().trim(),
+        first_name: first,
+        last_name: last,
+        name: full,
         email: (fd.get('email') || '').toString().trim(),
         phone: (fd.get('phone') || '').toString().trim(),
         project_type: (fd.get('project_type') || '').toString().trim(),
         message: (fd.get('message') || '').toString().trim(),
         source_url: location.href
       };
-      if (!row.name || !row.email) { setNote(leadNote, 'Please add your name and email.', 'err'); return; }
+      if (!first || !row.email) { setNote(leadNote, 'Please add your name and email.', 'err'); return; }
       var btn = lead.querySelector('button'); if (btn) btn.disabled = true;
       setNote(leadNote, 'Sending…');
+
+      // Always attempt GoHighLevel so a lead reaches the CRM even if DB write lags.
+      sendToGHL({
+        type: 'website_inquiry',
+        first_name: first, last_name: last, name: full, full_name: full,
+        email: row.email, phone: row.phone,
+        project_type: row.project_type,
+        message: row.message, info: row.message,
+        source: 'aterrabuilders.com', source_url: row.source_url
+      });
+
       insertRow('inquiries', row).then(function () {
         lead.reset();
         setNote(leadNote, 'Thank you — we’ll be in touch personally.', 'ok');
       }).catch(function (err) {
         if (err && err.message === 'not-configured') {
-          setNote(leadNote, 'Thanks! (Form storage isn’t connected yet — email us at ' + (cfg.CONTACT_EMAIL || 'hello@aterrabuilders.com') + '.)', 'ok');
+          // DB not wired yet, but the CRM webhook may still have received it.
+          lead.reset();
+          setNote(leadNote, 'Thank you — we’ll be in touch personally.', 'ok');
         } else {
           setNote(leadNote, 'Something went wrong. Please email ' + (cfg.CONTACT_EMAIL || 'hello@aterrabuilders.com') + '.', 'err');
         }
