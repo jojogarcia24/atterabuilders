@@ -1,0 +1,15 @@
+# Aterra Builders — Netlify configuration
+# Static site (repo root) + one serverless function for engagement tracking.
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# SPA-friendly: serve the function at /.netlify/functions/track-engagement
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
