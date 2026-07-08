@@ -22,6 +22,17 @@ const json = (code, obj) => ({ statusCode: code, headers: { 'Content-Type': 'app
 const svc = { apikey: SR, Authorization: 'Bearer ' + SR, 'Content-Type': 'application/json' };
 const rest = (path, opts = {}) => fetch(SUPABASE_URL + '/rest/v1/' + path, { ...opts, headers: { ...svc, ...(opts.headers || {}) } });
 
+// Determine the action from the query, the request path, or the raw URL.
+// Netlify rewrites can drop the ?action= query, so we also read it from the path
+// (matches /api/invest-create, /.netlify/functions/invest-api/create, or action=create).
+function resolveAction(event) {
+  var q = (event.queryStringParameters && event.queryStringParameters.action) || '';
+  if (q === 'create' || q === 'revoke' || q === 'list') return q;
+  var hay = (event.path || '') + '|' + (event.rawUrl || '');
+  var m = hay.match(/(?:invest-|\/)(create|revoke|list)\b/i);
+  return m ? m[1].toLowerCase() : '';
+}
+
 function authed(event) {
   if (!API_TOKEN) return false;
   const h = event.headers || {};
@@ -39,7 +50,7 @@ exports.handler = async (event) => {
   if (!API_TOKEN) return json(500, { ok: false, error: 'api-token-not-set' });
   if (!authed(event)) return json(401, { ok: false, error: 'unauthorized' });
 
-  const action = (event.queryStringParameters && event.queryStringParameters.action) || '';
+  const action = resolveAction(event);
   let body = {}; try { body = JSON.parse(event.body || '{}'); } catch (_) {}
 
   // ---- create ----
