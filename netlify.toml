@@ -24,17 +24,19 @@
   status = 200
 
 # Secured machine-to-machine API (shared secret) for minting/managing investor links.
+# Action is encoded in BOTH the path segment and the query, so the function can
+# resolve it even if Netlify drops the query on the rewrite.
 [[redirects]]
   from = "/api/invest-create"
-  to = "/.netlify/functions/invest-api?action=create"
+  to = "/.netlify/functions/invest-api/create?action=create"
   status = 200
 [[redirects]]
   from = "/api/invest-revoke"
-  to = "/.netlify/functions/invest-api?action=revoke"
+  to = "/.netlify/functions/invest-api/revoke?action=revoke"
   status = 200
 [[redirects]]
   from = "/api/invest-list"
-  to = "/.netlify/functions/invest-api?action=list"
+  to = "/.netlify/functions/invest-api/list?action=list"
   status = 200
 
 # SPA-friendly: serve the function at /.netlify/functions/track-engagement
