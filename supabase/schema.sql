@@ -66,6 +66,22 @@ create table if not exists public.subscribers (
 );
 create index if not exists subscribers_created_idx on public.subscribers(created_at desc);
 
+-- Private investor deal-room access links (magic-link tokens). The serverless
+-- function validates a token with the service role; admins manage rows via RLS.
+create table if not exists public.investor_links (
+  id             uuid primary key default gen_random_uuid(),
+  token          text unique not null,
+  name           text,
+  email          text,
+  note           text,
+  active         boolean not null default true,
+  view_count     integer not null default 0,
+  last_viewed_at timestamptz,
+  created_at     timestamptz not null default now()
+);
+create index if not exists investor_links_token_idx on public.investor_links(token);
+create index if not exists investor_links_created_idx on public.investor_links(created_at desc);
+
 -- ================================================================
 -- 3. ENGAGEMENT + ALERTS + PUSH  (service-role function writes these)
 -- ================================================================
@@ -141,6 +157,7 @@ create table if not exists public.agent_clients (
 alter table public.profiles          enable row level security;
 alter table public.inquiries         enable row level security;
 alter table public.subscribers       enable row level security;
+alter table public.investor_links    enable row level security;
 alter table public.page_engagement   enable row level security;
 alter table public.engagement_alerts enable row level security;
 alter table public.push_subscriptions enable row level security;
@@ -167,6 +184,11 @@ drop policy if exists sub_anon_insert on public.subscribers;
 drop policy if exists sub_admin_read  on public.subscribers;
 create policy sub_anon_insert on public.subscribers for insert to anon, authenticated with check ( true );
 create policy sub_admin_read  on public.subscribers for select using ( is_admin() );
+
+-- investor_links: admins manage; the serverless function uses the service role
+-- (bypasses RLS) to validate a token without exposing the table to the public.
+drop policy if exists il_admin_all on public.investor_links;
+create policy il_admin_all on public.investor_links for all using ( is_admin() ) with check ( is_admin() );
 
 -- page_engagement / engagement_alerts: admin read only (service-role writes; no insert policy on purpose).
 drop policy if exists eng_admin_read on public.page_engagement;

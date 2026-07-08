@@ -125,6 +125,7 @@
       <button class="tab active" data-tab="inquiries">Inquiries <span class="count" id="c-inq">0</span></button>
       <button class="tab" data-tab="subscribers">Subscribers <span class="count" id="c-sub">0</span></button>
       <button class="tab" data-tab="heat">Activity &amp; Heat <span class="count" id="c-heat">0</span></button>
+      <button class="tab" data-tab="investors">Investors <span class="count" id="c-inv">0</span></button>
     </div>
 
     <!-- INQUIRIES -->
@@ -143,6 +144,23 @@
     <section class="panel" data-panel="heat">
       <div class="toolrow"><h2>Activity &amp; Heat</h2><span class="sub" style="color:var(--muted);font-size:.8rem">Signed-in visitors, scored 0–100</span></div>
       <div class="card tablescroll"><div id="heat-box"></div></div>
+    </section>
+
+    <!-- INVESTORS -->
+    <section class="panel" data-panel="investors">
+      <div class="toolrow"><h2>Investor links</h2><span class="sub" style="color:var(--muted);font-size:.8rem">Private deal-room access · magic links</span></div>
+      <div class="card" style="padding:1.4rem 1.5rem;margin-bottom:1.5rem">
+        <form id="inv-form" style="display:grid;gap:.8rem;grid-template-columns:1fr;max-width:640px">
+          <div class="two" style="display:grid;gap:.8rem;grid-template-columns:1fr 1fr">
+            <div class="field"><label for="iv-name">Investor name</label><input id="iv-name" type="text" placeholder="e.g. Dan Whitmore"></div>
+            <div class="field"><label for="iv-email">Email (optional)</label><input id="iv-email" type="email" placeholder="dan@example.com"></div>
+          </div>
+          <div class="field"><label for="iv-note">Note (optional)</label><input id="iv-note" type="text" placeholder="e.g. intro’d by Cliff · wants Townsend"></div>
+          <button type="submit" class="ghost solid" style="justify-self:start">Generate access link</button>
+          <p id="inv-note" class="form-note" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+      <div class="card tablescroll"><div id="inv-box"></div></div>
     </section>
   </div>
 </div>
@@ -218,6 +236,34 @@
       .finally(function () { btn.disabled = false; });
   });
 
+  // ---- generate investor access link ----
+  function makeToken() {
+    var a = new Uint8Array(24); (window.crypto || window.msCrypto).getRandomValues(a);
+    var s = ''; for (var i = 0; i < a.length; i++) s += ('0' + a[i].toString(16)).slice(-2);
+    return s;
+  }
+  $('#inv-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var row = {
+      token: makeToken(),
+      name: $('#iv-name').value.trim(),
+      email: $('#iv-email').value.trim(),
+      note: $('#iv-note').value.trim()
+    };
+    var btn = e.target.querySelector('button'); btn.disabled = true;
+    note($('#inv-note'), 'Creating link…');
+    api('investor_links', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify(row) })
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+      .then(function (rows) {
+        var url = investUrl((rows[0] || row).token);
+        note($('#inv-note'), 'Link created: ' + url, 'ok');
+        $('#inv-form').reset();
+        if (navigator.clipboard) navigator.clipboard.writeText(url).catch(function () {});
+        loadAll();
+      }).catch(function () { note($('#inv-note'), 'Could not create link.', 'err'); })
+      .finally(function () { btn.disabled = false; });
+  });
+
   // ---- tabs ----
   document.querySelectorAll('.tab').forEach(function (t) {
     t.addEventListener('click', function () {
@@ -258,6 +304,51 @@
       renderHeat(rows || []);
       $('#c-heat').textContent = (rows || []).length; setStat(rows || []);
     }).catch(function () { $('#heat-box').innerHTML = '<div class="empty">No engagement data yet.</div>'; });
+    // Investor links
+    api('investor_links?select=*&order=created_at.desc&limit=500').then(handle).then(function (rows) {
+      renderInvestors(rows || []);
+      $('#c-inv').textContent = (rows || []).length;
+    }).catch(fail);
+  }
+
+  function investUrl(token) {
+    var base = (cfg.SITE_URL && !/YOUR_/.test(cfg.SITE_URL)) ? cfg.SITE_URL : 'https://aterrabuilders.com';
+    return base.replace(/\/$/, '') + '/invest?key=' + token;
+  }
+  function renderInvestors(rows) {
+    var box = $('#inv-box');
+    if (!rows.length) { box.innerHTML = '<div class="empty">No investor links yet. Generate one above to share the private deck.</div>'; return; }
+    box.innerHTML = '<table><thead><tr><th>Investor</th><th>Link</th><th>Views</th><th>Last viewed</th><th>Status</th></tr></thead><tbody>' +
+      rows.map(function (r) {
+        var url = investUrl(r.token);
+        return '<tr>' +
+          '<td><div class="name">' + esc(r.name || '—') + '</div>' + (r.email ? '<div class="sub">' + esc(r.email) + '</div>' : '') +
+          (r.note ? '<div class="sub">' + esc(r.note) + '</div>' : '') + '</td>' +
+          '<td><button class="btn" data-copy="' + esc(url) + '" style="padding:.4em .8em">Copy link</button></td>' +
+          '<td>' + (r.view_count || 0) + '</td>' +
+          '<td class="sub">' + (r.last_viewed_at ? new Date(r.last_viewed_at).toLocaleString() : '—') + '</td>' +
+          '<td>' + (r.active
+            ? '<span class="pill new">Active</span><div><button class="btn" data-revoke="' + r.id + '" style="margin-top:.5rem;padding:.4em .8em">Revoke</button></div>'
+            : '<span class="pill contacted">Revoked</span><div><button class="btn" data-enable="' + r.id + '" style="margin-top:.5rem;padding:.4em .8em">Re-activate</button></div>') +
+          '</td></tr>';
+      }).join('') + '</tbody></table>';
+    box.querySelectorAll('[data-copy]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var t = b.dataset.copy;
+        (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () {
+          var o = b.textContent; b.textContent = 'Copied ✓'; setTimeout(function () { b.textContent = o; }, 1500);
+        }).catch(function () { window.prompt('Copy this link:', t); });
+      });
+    });
+    box.querySelectorAll('[data-revoke],[data-enable]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var id = b.dataset.revoke || b.dataset.enable;
+        var active = !!b.dataset.enable;
+        b.disabled = true;
+        api('investor_links?id=eq.' + id, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ active: active }) })
+          .then(function () { loadAll(); });
+      });
+    });
   }
   function handle(r) {
     if (r.status === 401) { localStorage.removeItem(SKEY); location.reload(); return []; }

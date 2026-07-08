@@ -16,6 +16,13 @@
 [functions]
   node_bundler = "esbuild"
 
+# Pretty URL for the private investor room -> serves the gated function.
+# status 200 = rewrite (URL stays /invest); the ?key=... query passes through.
+[[redirects]]
+  from = "/invest"
+  to = "/.netlify/functions/investor-deck"
+  status = 200
+
 # SPA-friendly: serve the function at /.netlify/functions/track-engagement
 [[headers]]
   for = "/sw.js"
