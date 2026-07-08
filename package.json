@@ -1,0 +1,12 @@
+{
+  "name": "aterra-builders",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Aterra Builders — custom residences site with lead engagement / heat-map admin.",
+  "scripts": {
+    "dev": "netlify dev"
+  },
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}

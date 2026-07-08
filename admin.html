@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin — Aterra Builders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icon-32.png">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<style>
+  body{background:var(--paper)}
+  .adminbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
+    padding:1rem clamp(1rem,4vw,2.4rem);background:var(--ink);color:var(--paper)}
+  .adminbar .wordmark{color:var(--paper);font-size:1.05rem}
+  .adminbar .who{font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(250,249,245,.65);
+    display:flex;gap:1rem;align-items:center}
+  .btn{font-family:var(--f-ui);font-size:.68rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+    padding:.7em 1.2em;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer;border-radius:0}
+  .btn.solid{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+  .btn:disabled{opacity:.5;cursor:default}
+
+  /* login */
+  .login-wrap{min-height:100svh;display:flex;align-items:center;justify-content:center;padding:2rem}
+  .login-card{width:100%;max-width:26rem;background:var(--paper-2);border:1px solid var(--hair);padding:2.6rem}
+  .login-card h1{font-family:var(--f-display);font-weight:500;font-size:1.7rem;margin-bottom:.4rem}
+  .login-card p.sub{color:var(--muted);font-size:.92rem;margin-bottom:1.8rem}
+  .login-card .field{margin-bottom:1rem}
+  .login-card button{width:100%;justify-content:center;margin-top:.6rem}
+
+  /* dashboard */
+  .dash{max-width:1200px;margin:0 auto;padding:clamp(1.4rem,4vw,2.6rem)}
+  .tabs{display:flex;gap:.4rem;flex-wrap:wrap;border-bottom:1px solid var(--hair);margin-bottom:2rem}
+  .tab{font-family:var(--f-ui);font-size:.72rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
+    padding:.9em 1.3em;background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer}
+  .tab.active{color:var(--ink);border-bottom-color:var(--ink)}
+  .tab .count{display:inline-block;margin-left:.5em;font-size:.62rem;background:var(--sand);color:var(--muted);
+    padding:.15em .6em;border-radius:999px}
+
+  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--hair);border:1px solid var(--hair);margin-bottom:2rem}
+  @media(min-width:760px){.stats{grid-template-columns:repeat(4,1fr)}}
+  .stat{background:var(--paper-2);padding:1.6rem 1.5rem}
+  .stat .n{font-family:var(--f-display);font-weight:500;font-size:2.2rem;line-height:1}
+  .stat .l{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-top:.5rem}
+
+  .panel{display:none}
+  .panel.active{display:block}
+  .card{background:var(--paper-2);border:1px solid var(--hair)}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  th{text-align:left;font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+    font-weight:600;padding:1rem 1.1rem;border-bottom:1px solid var(--hair);white-space:nowrap}
+  td{padding:1rem 1.1rem;border-bottom:1px solid var(--hair);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  td .name{font-weight:600}
+  td .sub{color:var(--muted);font-size:.82rem}
+  td a{color:var(--ink);border-bottom:1px solid var(--hair)}
+  .tablescroll{overflow-x:auto}
+
+  .pill{display:inline-block;font-size:.58rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    padding:.3em .7em;border-radius:999px}
+  .pill.hot{background:#c0402f;color:#fff}
+  .pill.warm{background:#d99a2b;color:#1a1a1a}
+  .pill.cool{background:var(--sand);color:var(--muted)}
+  .pill.new{background:#2f6b3a;color:#fff}
+  .pill.contacted{background:var(--sand);color:var(--muted)}
+
+  .heatbar{display:flex;height:8px;border-radius:999px;overflow:hidden;background:var(--sand);margin:.5rem 0 0;min-width:120px}
+  .heatbar i{display:block;height:100%}
+  .empty{padding:3rem 1.5rem;text-align:center;color:var(--muted);font-size:.95rem}
+  .msg{white-space:pre-wrap;max-width:34ch;color:var(--muted);font-size:.84rem}
+  .toolrow{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+  .toolrow h2{font-family:var(--f-display);font-weight:500;font-size:1.4rem}
+  .banner{background:#fff6e6;border:1px solid #eadcb8;color:#7a5a12;padding:1rem 1.2rem;font-size:.86rem;margin-bottom:1.5rem}
+  .banner code{background:rgba(0,0,0,.06);padding:.1em .4em}
+  .views-link{cursor:pointer}
+  .detail-row td{background:var(--paper);font-size:.84rem}
+  .detail-row .di{display:flex;justify-content:space-between;gap:1rem;padding:.35rem 0;border-bottom:1px dashed var(--hair)}
+  .detail-row .di:last-child{border-bottom:0}
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="login" class="login-wrap">
+  <form id="login-form" class="login-card" novalidate>
+    <a href="index.html" class="wordmark" style="color:var(--ink);font-size:1.1rem;display:inline-block;margin-bottom:1.6rem">ATERRA<small>BUILDERS</small></a>
+    <h1>Admin sign in</h1>
+    <p class="sub">Leads, subscribers &amp; engagement.</p>
+    <div id="cfg-banner" class="banner" style="display:none"></div>
+    <div class="field"><label for="ad-email">Email</label><input id="ad-email" type="email" autocomplete="username" required></div>
+    <div class="field"><label for="ad-pass">Password</label><input id="ad-pass" type="password" autocomplete="current-password" required></div>
+    <button type="submit" class="ghost solid">Sign in</button>
+    <p id="login-note" class="form-note" role="status" aria-live="polite"></p>
+  </form>
+</div>
+
+<!-- ===================== DASHBOARD ===================== -->
+<div id="dash" style="display:none">
+  <div class="adminbar">
+    <a href="index.html" class="wordmark">ATERRA<small>BUILDERS</small></a>
+    <div class="who">
+      <span id="who-email"></span>
+      <button id="btn-notify" class="btn" style="display:none">Enable alerts</button>
+      <button id="btn-refresh" class="btn">Refresh</button>
+      <button id="btn-signout" class="btn solid">Sign out</button>
+    </div>
+  </div>
+
+  <div class="dash">
+    <div class="stats" id="stats"></div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="inquiries">Inquiries <span class="count" id="c-inq">0</span></button>
+      <button class="tab" data-tab="subscribers">Subscribers <span class="count" id="c-sub">0</span></button>
+      <button class="tab" data-tab="heat">Activity &amp; Heat <span class="count" id="c-heat">0</span></button>
+    </div>
+
+    <!-- INQUIRIES -->
+    <section class="panel active" data-panel="inquiries">
+      <div class="toolrow"><h2>Inquiries</h2></div>
+      <div class="card tablescroll"><div id="inq-box"></div></div>
+    </section>
+
+    <!-- SUBSCRIBERS -->
+    <section class="panel" data-panel="subscribers">
+      <div class="toolrow"><h2>Subscribers</h2><button id="btn-export" class="btn">Export CSV</button></div>
+      <div class="card tablescroll"><div id="sub-box"></div></div>
+    </section>
+
+    <!-- HEAT -->
+    <section class="panel" data-panel="heat">
+      <div class="toolrow"><h2>Activity &amp; Heat</h2><span class="sub" style="color:var(--muted);font-size:.8rem">Signed-in visitors, scored 0–100</span></div>
+      <div class="card tablescroll"><div id="heat-box"></div></div>
+    </section>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+(function () {
+  var cfg = window.ATERRA_CONFIG || {};
+  var SB = cfg.SUPABASE_URL, KEY = cfg.SUPABASE_ANON_KEY;
+  var CONFIGURED = SB && KEY && !/YOUR_/.test(SB) && !/YOUR_/.test(KEY);
+  var SKEY = 'aterra-admin-session';
+  var session = null;
+  try { session = JSON.parse(localStorage.getItem(SKEY) || 'null'); } catch (_) {}
+
+  var $ = function (s) { return document.querySelector(s); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[<>&"]/g, function (c) { return ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]); }); };
+  var note = function (el, m, k) { el.textContent = m; el.className = 'form-note' + (k ? ' ' + k : ''); };
+
+  if (!CONFIGURED) {
+    var b = $('#cfg-banner'); b.style.display = 'block';
+    b.innerHTML = 'Not connected yet. Add your Supabase URL &amp; anon key in <code>config.js</code>, then run <code>supabase/schema.sql</code>.';
+  }
+
+  // ---- REST helpers ----
+  function authHeaders() {
+    return { apikey: KEY, Authorization: 'Bearer ' + (session && session.access_token), 'Content-Type': 'application/json' };
+  }
+  function api(path, opts) {
+    opts = opts || {};
+    return fetch(SB + '/rest/v1/' + path, { ...opts, headers: { ...authHeaders(), ...(opts.headers || {}) } });
+  }
+
+  // ---- auth ----
+  $('#login-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!CONFIGURED) { note($('#login-note'), 'Add Supabase keys to config.js first.', 'err'); return; }
+    var email = $('#ad-email').value.trim(), pass = $('#ad-pass').value;
+    var btn = e.target.querySelector('button'); btn.disabled = true;
+    note($('#login-note'), 'Signing in…');
+    fetch(SB + '/auth/v1/token?grant_type=password', {
+      method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, password: pass })
+    }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        if (!res.ok) { note($('#login-note'), res.j.error_description || res.j.msg || 'Invalid login.', 'err'); btn.disabled = false; return; }
+        session = res.j; localStorage.setItem(SKEY, JSON.stringify(session));
+        boot();
+      }).catch(function () { note($('#login-note'), 'Network error.', 'err'); btn.disabled = false; });
+  });
+
+  $('#btn-signout').addEventListener('click', function () {
+    try { fetch(SB + '/auth/v1/logout', { method: 'POST', headers: authHeaders() }); } catch (_) {}
+    session = null; localStorage.removeItem(SKEY); location.reload();
+  });
+  $('#btn-refresh').addEventListener('click', loadAll);
+
+  // ---- tabs ----
+  document.querySelectorAll('.tab').forEach(function (t) {
+    t.addEventListener('click', function () {
+      document.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('active'); });
+      document.querySelectorAll('.panel').forEach(function (x) { x.classList.remove('active'); });
+      t.classList.add('active');
+      document.querySelector('.panel[data-panel="' + t.dataset.tab + '"]').classList.add('active');
+    });
+  });
+
+  // ---- boot ----
+  function boot() {
+    if (!session || !session.access_token) return;
+    $('#login').style.display = 'none';
+    $('#dash').style.display = 'block';
+    $('#who-email').textContent = (session.user && session.user.email) || '';
+    if ('serviceWorker' in navigator && 'PushManager' in window && cfg.VAPID_PUBLIC_KEY) {
+      $('#btn-notify').style.display = 'inline-block';
+    }
+    loadAll();
+  }
+
+  var SUBS = [];
+  function loadAll() {
+    // Inquiries
+    api('inquiries?select=*&order=created_at.desc&limit=500').then(handle).then(function (rows) {
+      renderInquiries(rows || []);
+      $('#c-inq').textContent = (rows || []).length;
+      setStat();
+    }).catch(fail);
+    // Subscribers
+    api('subscribers?select=*&order=created_at.desc&limit=1000').then(handle).then(function (rows) {
+      SUBS = rows || []; renderSubs(SUBS);
+      $('#c-sub').textContent = SUBS.length; setStat();
+    }).catch(fail);
+    // Heat
+    api('rpc/get_lead_scores', { method: 'POST', body: '{}' }).then(handle).then(function (rows) {
+      renderHeat(rows || []);
+      $('#c-heat').textContent = (rows || []).length; setStat(rows || []);
+    }).catch(function () { $('#heat-box').innerHTML = '<div class="empty">No engagement data yet.</div>'; });
+  }
+  function handle(r) {
+    if (r.status === 401) { localStorage.removeItem(SKEY); location.reload(); return []; }
+    return r.ok ? r.json() : [];
+  }
+  function fail() {}
+
+  var _inq = 0, _sub = 0, _hot = 0;
+  function setStat(heatRows) {
+    _inq = parseInt($('#c-inq').textContent, 10) || 0;
+    _sub = parseInt($('#c-sub').textContent, 10) || 0;
+    if (heatRows) _hot = heatRows.filter(function (r) { return (r.score || 0) >= 70; }).length;
+    var newInq = window._newInq || 0;
+    $('#stats').innerHTML =
+      stat(_inq, 'Total inquiries') + stat(newInq, 'New / uncontacted') +
+      stat(_sub, 'Subscribers') + stat(_hot, 'Hot leads');
+  }
+  function stat(n, l) { return '<div class="stat"><div class="n">' + n + '</div><div class="l">' + l + '</div></div>'; }
+
+  // ---- renderers ----
+  function fmt(d) { return d ? new Date(d).toLocaleString() : '—'; }
+
+  function renderInquiries(rows) {
+    window._newInq = rows.filter(function (r) { return (r.status || 'new') === 'new'; }).length;
+    var box = $('#inq-box');
+    if (!rows.length) { box.innerHTML = '<div class="empty">No inquiries yet.</div>'; return; }
+    box.innerHTML = '<table><thead><tr><th>Contact</th><th>Project</th><th>Message</th><th>Received</th><th>Status</th></tr></thead><tbody>' +
+      rows.map(function (r) {
+        var st = r.status || 'new';
+        var pillClass = st === 'new' ? 'new' : 'contacted';
+        return '<tr>' +
+          '<td><div class="name">' + esc(r.name || '—') + '</div>' +
+          (r.email ? '<div class="sub"><a href="mailto:' + esc(r.email) + '">' + esc(r.email) + '</a></div>' : '') +
+          (r.phone ? '<div class="sub"><a href="tel:' + esc(r.phone) + '">' + esc(r.phone) + '</a></div>' : '') + '</td>' +
+          '<td>' + esc(r.project_type || '—') + '</td>' +
+          '<td><div class="msg">' + esc(r.message || '') + '</div></td>' +
+          '<td class="sub">' + fmt(r.created_at) + '</td>' +
+          '<td><span class="pill ' + pillClass + '">' + esc(st) + '</span>' +
+          (st === 'new' ? '<div><button class="btn" data-mark="' + r.id + '" style="margin-top:.5rem;padding:.4em .8em">Mark contacted</button></div>' : '') +
+          '</td></tr>';
+      }).join('') + '</tbody></table>';
+    box.querySelectorAll('[data-mark]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        btn.disabled = true;
+        api('inquiries?id=eq.' + btn.dataset.mark, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: JSON.stringify({ status: 'contacted' }) })
+          .then(function () { loadAll(); });
+      });
+    });
+  }
+
+  function renderSubs(rows) {
+    var box = $('#sub-box');
+    if (!rows.length) { box.innerHTML = '<div class="empty">No subscribers yet.</div>'; return; }
+    box.innerHTML = '<table><thead><tr><th>Email</th><th>From page</th><th>Subscribed</th></tr></thead><tbody>' +
+      rows.map(function (r) {
+        return '<tr><td class="name">' + esc(r.email) + '</td>' +
+          '<td class="sub">' + esc(r.source_url || '—') + '</td>' +
+          '<td class="sub">' + fmt(r.created_at) + '</td></tr>';
+      }).join('') + '</tbody></table>';
+  }
+
+  function heatColor(score) { return score >= 70 ? '#c0402f' : score >= 40 ? '#d99a2b' : '#8C8A85'; }
+  function dwell(s) { s = Math.round(s || 0); if (s < 60) return s + 's'; var m = Math.floor(s / 60), ss = s % 60; return m + 'm' + (ss ? (' ' + ss + 's') : ''); }
+
+  function renderHeat(rows) {
+    rows = (rows || []).filter(function (r) { return r.last_seen || (r.total_seconds || 0) > 0; });
+    var box = $('#heat-box');
+    if (!rows.length) { box.innerHTML = '<div class="empty">No signed-in visitor activity yet. Once buyers register and browse, they’ll be scored here.</div>'; return; }
+    box.innerHTML = '<table><thead><tr><th>Visitor</th><th>Heat</th><th>Dwell</th><th>Views</th><th>Favorites</th><th>Last seen</th></tr></thead><tbody>' +
+      rows.slice(0, 100).map(function (r, i) {
+        var props = Array.isArray(r.recent_properties) ? r.recent_properties : [];
+        var lvl = r.score >= 70 ? 'hot' : r.score >= 40 ? 'warm' : 'cool';
+        var n = r.property_views || 0;
+        var viewsCell = (n > 0 && props.length) ? '<a class="views-link" data-i="' + i + '">' + n + ' ▾</a>' : n;
+        var detail = props.length ? '<tr class="detail-row" id="d-' + i + '" style="display:none"><td colspan="6">' +
+          props.map(function (p) {
+            var url = p.url || (p.listing_id ? ('available.html?listing_id=' + encodeURIComponent(p.listing_id)) : '#');
+            var nm = p.title || p.address || ('Listing ' + (p.listing_id || ''));
+            return '<div class="di"><a href="' + esc(url) + '" target="_blank">' + esc(nm) + ' →</a><span>' + dwell(p.seconds) + '</span></div>';
+          }).join('') + '</td></tr>' : '';
+        return '<tr>' +
+          '<td><div class="name">' + esc(r.full_name || r.email || 'Visitor') + '</div><div class="sub">' + esc(r.email || '') + '</div></td>' +
+          '<td><span class="pill ' + lvl + '">' + r.score + '</span>' +
+          '<div class="heatbar"><i style="width:' + Math.max(4, r.score) + '%;background:' + heatColor(r.score) + '"></i></div></td>' +
+          '<td>' + dwell(r.total_seconds) + '</td>' +
+          '<td>' + viewsCell + '</td>' +
+          '<td>' + (r.favorites || 0) + '</td>' +
+          '<td class="sub">' + fmt(r.last_seen) + '</td></tr>' + detail;
+      }).join('') + '</tbody></table>';
+    box.querySelectorAll('.views-link').forEach(function (a) {
+      a.addEventListener('click', function () { var d = $('#d-' + a.dataset.i); if (d) d.style.display = d.style.display === 'none' ? '' : 'none'; });
+    });
+  }
+
+  // ---- CSV export ----
+  $('#btn-export').addEventListener('click', function () {
+    if (!SUBS.length) return;
+    var csv = 'email,source_url,created_at\n' + SUBS.map(function (r) {
+      return [r.email, r.source_url || '', r.created_at || ''].map(function (v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(',');
+    }).join('\n');
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = 'aterra-subscribers.csv'; a.click();
+  });
+
+  // ---- web push enable ----
+  $('#btn-notify').addEventListener('click', function () {
+    if (!cfg.VAPID_PUBLIC_KEY) return;
+    navigator.serviceWorker.register('/sw.js').then(function (reg) {
+      return Notification.requestPermission().then(function (perm) {
+        if (perm !== 'granted') throw new Error('denied');
+        return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64(cfg.VAPID_PUBLIC_KEY) });
+      });
+    }).then(function (sub) {
+      var j = sub.toJSON();
+      return api('push_subscriptions', {
+        method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' },
+        body: JSON.stringify({ user_id: session.user.id, endpoint: sub.endpoint, p256dh: j.keys && j.keys.p256dh, auth: j.keys && j.keys.auth, subscription: j, user_agent: navigator.userAgent })
+      });
+    }).then(function () { $('#btn-notify').textContent = 'Alerts on'; $('#btn-notify').disabled = true; })
+      .catch(function () { $('#btn-notify').textContent = 'Alerts blocked'; });
+  });
+  function urlB64(s) {
+    var pad = '='.repeat((4 - s.length % 4) % 4);
+    var b = (s + pad).replace(/-/g, '+').replace(/_/g, '/');
+    var raw = atob(b), arr = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+    return arr;
+  }
+
+  // ---- start ----
+  if (session && session.access_token) boot();
+})();
+</script>
+</body>
+</html>
