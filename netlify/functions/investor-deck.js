@@ -52,7 +52,8 @@ exports.handler = async (event) => {
 /* ---------------- shared styles ---------------- */
 const STYLE = `
   :root{--paper:#F7F6F3;--paper2:#fff;--sand:#EFEEEB;--ink:#161616;--muted:#6E6C67;--gold:#8C8A85;--hair:#E6E5E1;
-    --fd:'Bodoni Moda',Georgia,serif;--fe:'Cormorant Garamond',Georgia,serif;--fu:'Inter',system-ui,sans-serif;--g:clamp(1.25rem,5vw,6rem);}
+    --fd:'Bodoni Moda',Georgia,serif;--fe:'Cormorant Garamond',Georgia,serif;--fu:'Inter',system-ui,sans-serif;--g:clamp(1.25rem,5vw,6rem);
+    --hero-img:url('/assets/hero.jpg');--band-img:url('/assets/service-development.jpg');}
   *{margin:0;padding:0;box-sizing:border-box}
   body{background:var(--paper);color:var(--ink);font-family:var(--fu);font-weight:400;line-height:1.7;-webkit-font-smoothing:antialiased}
   .wrap{max-width:1180px;margin:0 auto;padding:0 var(--g)}
@@ -100,6 +101,42 @@ const STYLE = `
   .cta h2{color:var(--paper)}.cta p{color:rgba(250,249,245,.7)}
   .badge{display:inline-block;font-size:.6rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;background:var(--gold);color:#fff;padding:.4em 1em;margin-bottom:1rem}
   .foothint{font-size:.78rem;color:var(--muted);margin-top:1.2rem}
+
+  /* ---- editorial hero + motion ---- */
+  .hero{position:relative;min-height:100svh;display:flex;align-items:center;justify-content:center;
+    text-align:center;color:#fff;overflow:hidden;isolation:isolate;border-top:0;padding:2rem var(--g)}
+  .hero .bg{position:absolute;inset:0;z-index:-2;background:#151515 center/cover no-repeat;
+    background-image:var(--hero-img);animation:kb 30s ease-in-out infinite alternate;
+    transform-origin:58% 42%;will-change:transform}
+  .hero::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,
+    rgba(12,12,12,.58) 0%,rgba(12,12,12,.22) 34%,rgba(12,12,12,.30) 60%,rgba(10,10,10,.74) 100%)}
+  @keyframes kb{from{transform:scale(1.05)}to{transform:scale(1.17)}}
+  .hero .inner{max-width:62rem;animation:fadeUp 1.4s cubic-bezier(.16,1,.3,1) .12s both}
+  .hero .eyebrow{color:rgba(255,255,255,.82)}
+  .hero h1{font-family:var(--fd);font-weight:500;font-size:clamp(3.4rem,12vw,9rem);line-height:.9;
+    letter-spacing:.08em;text-indent:.08em;color:#fff;margin:1.3rem 0 .3rem;text-shadow:0 2px 60px rgba(0,0,0,.5)}
+  .hero .kick{font-size:.66rem;font-weight:500;letter-spacing:.5em;text-indent:.5em;text-transform:uppercase;color:rgba(255,255,255,.8)}
+  .hero .sub{font-family:var(--fe);font-style:italic;font-size:clamp(1.35rem,2.7vw,2.2rem);
+    color:rgba(255,255,255,.94);margin-top:1.8rem;line-height:1.35}
+  .hero .cue{position:absolute;bottom:1.7rem;left:50%;transform:translateX(-50%);
+    font-size:.58rem;letter-spacing:.36em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+
+  /* full-bleed editorial band */
+  .band{position:relative;min-height:56svh;display:flex;align-items:center;justify-content:center;
+    text-align:center;color:#fff;overflow:hidden;border-top:0}
+  .band .bg{position:absolute;inset:0;z-index:-2;background:#151515 center/cover no-repeat;
+    background-image:var(--band-img);animation:kb 34s ease-in-out infinite alternate;transform-origin:40% 50%}
+  .band::after{content:"";position:absolute;inset:0;z-index:-1;background:rgba(12,12,12,.5)}
+  .band .q{font-family:var(--fe);font-style:italic;font-weight:500;font-size:clamp(1.7rem,4vw,3rem);
+    color:#fff;max-width:22ch;text-shadow:0 2px 40px rgba(0,0,0,.5)}
+
+  /* reveal on scroll */
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity 1s cubic-bezier(.2,.7,.2,1),transform 1s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){
+    .hero .bg,.band .bg,.hero .inner{animation:none!important}
+    .reveal{opacity:1!important;transform:none!important}}
 `;
 
 function gate(title, sub) {
@@ -122,14 +159,15 @@ function deck(name) {
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,500;1,400&family=Cormorant+Garamond:ital@1&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>${STYLE}</style></head><body>
 
-<section style="border-top:0;text-align:center;padding-top:clamp(4rem,10vh,8rem)">
-  <div class="wrap">
+<section class="hero">
+  <div class="bg" aria-hidden="true"></div>
+  <div class="inner">
     <div class="eyebrow">${hello}Private Investment Opportunity</div>
-    <h1 style="font-family:var(--fd);font-weight:500;font-size:clamp(3rem,9vw,7rem);line-height:.95;letter-spacing:.06em;margin:1.2rem 0">ATTERRA</h1>
-    <div class="eyebrow" style="color:var(--muted)">Builders · North Dallas</div>
-    <p class="lead" style="margin:2rem auto 0;font-family:var(--fe);font-style:italic;font-size:clamp(1.3rem,2.4vw,1.9rem)">Luxury new construction, engineered by data — delivered by craft.</p>
-    <p class="foothint">Build · Sell · Return · 2026 · Confidential</p>
+    <h1>ATTERRA</h1>
+    <div class="kick">Builders · North Dallas</div>
+    <p class="sub">Luxury new construction,<br>engineered by data — delivered by craft.</p>
   </div>
+  <span class="cue">Scroll</span>
 </section>
 
 <section><div class="wrap"><div class="eyebrow">The Vision</div>
@@ -301,6 +339,10 @@ function deck(name) {
   </div>
 </div></section>
 
+<section class="band"><div class="bg" aria-hidden="true"></div>
+  <div class="q">Built for life.<br>Designed for you.</div>
+</section>
+
 <section class="cta"><div class="wrap" style="text-align:center">
   <div class="eyebrow" style="color:rgba(250,249,245,.6)">The Invitation</div>
   <h2 style="margin-top:1rem">Build with us.</h2>
@@ -315,5 +357,13 @@ function deck(name) {
   <p class="disc">This presentation is confidential and provided solely for informational and discussion purposes. It does not constitute an offer to sell, or a solicitation of an offer to buy, any security or investment. All figures are estimates or targets and are subject to change; certain figures (build costs, target sale prices, and returns) are illustrative and not guaranteed. Past or in-progress projects are not indicative of future results. Real estate investment involves substantial risk, including the possible loss of principal. Certain projects referenced were acquired and financed by affiliated entities (JLJ Capital Partners LLC; Build DallasTX LLC) with Atterra participating in design, pricing, and sale. Prospective investors should conduct their own due diligence and consult their own legal, tax, and financial advisors. Nothing herein is legal, tax, or investment advice.</p>
 </div></section>
 
+<script>
+(function(){
+  var els = document.querySelectorAll('section:not(.hero):not(.band) h2, section .lead, section .cols, section .table, section .scen, section .deal, section .steps, section .disc');
+  if (!('IntersectionObserver' in window)) return;
+  var io = new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12,rootMargin:'0px 0px -8% 0px'});
+  els.forEach(function(el){el.classList.add('reveal');io.observe(el);});
+})();
+</script>
 </body></html>`;
 }
