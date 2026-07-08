@@ -73,7 +73,9 @@ create table if not exists public.investor_links (
   token          text unique not null,
   name           text,
   email          text,
-  note           text,
+  phone          text,
+  note           text,                       -- free-form label
+  deck           text not null default 'investor',  -- 'investor' | 'partner'
   active         boolean not null default true,
   view_count     integer not null default 0,
   last_viewed_at timestamptz,
@@ -282,6 +284,19 @@ as $function$
 $function$;
 
 grant execute on function public.get_lead_scores() to authenticated;
+
+-- list admins (with email) for the admin Team tab — admin-only
+create or replace function public.list_admins()
+returns table(id uuid, full_name text, email text, role text, created_at timestamptz)
+language sql stable security definer set search_path to 'public'
+as $$
+  select p.id, p.full_name, au.email, p.role, p.created_at
+  from public.profiles p
+  join auth.users au on au.id = p.id
+  where p.role = 'admin' and public.is_admin()
+  order by p.created_at asc;
+$$;
+grant execute on function public.list_admins() to authenticated;
 
 -- ================================================================
 -- 8. MAKE YOURSELF ADMIN  (run once, after you sign up in the app)
