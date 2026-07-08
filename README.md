@@ -21,9 +21,23 @@ plus an **admin dashboard** that tracks inquiries, subscribers, and a signed-in-
 | `supabase/schema.sql` | All tables, RLS, and the `get_lead_scores()` heat RPC |
 | `assets/hero.jpg` | Shared hero photo |
 
-The site works as **plain static files** today. The forms and admin light up once you
-connect Supabase; hot-lead alerts (email / push / GoHighLevel) light up once you deploy
-the Netlify function with keys.
+## Status — LIVE backend
+
+- **Supabase project:** `Aterra Builders` (ref `cxreyjttrzkbixzxdssb`, region us-east-2) — schema applied, `config.js` wired with the project URL + anon key.
+- **Admin login** (`admin.html`): `jojo@elitelivingrealty.com` — a temporary password was set at provisioning; change it in Supabase → Authentication → Users, or ask to have it rotated.
+- **Inquiry form → GoHighLevel:** every website inquiry is POSTed to the configured GHL inbound webhook (`GHL_WEBHOOK_URL` in `config.js`) with `first_name`, `last_name`, `email`, `phone`, `message`/`info`, and also stored in Supabase `inquiries`. Build a GHL workflow on that inbound webhook to text/email yourself — that is your live lead alert.
+- **Subscribers** are stored in Supabase `subscribers` and shown in the admin (with CSV export).
+
+### Heat map — how it populates
+The Activity & Heat tab scores **signed-in** visitors only (privacy by design in the
+handoff spec). This marketing site has no visitor login yet, so the heat table stays
+empty until either (a) a buyer login/favorites experience is added, or (b) you opt into
+anonymous visitor tracking. The tables, RPC, tracker, and Netlify function are all in
+place for when you do. Dwell-based push/email alerts also require the serverless function
+deployed with a `RESEND_API_KEY` and the generated VAPID keys.
+
+The site works as **plain static files**; the forms and admin are already connected to
+the live Supabase project above.
 
 ## Editable content
 

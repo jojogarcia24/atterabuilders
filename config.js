@@ -6,9 +6,9 @@
    ================================================================ */
 window.ATERRA_CONFIG = {
   // e.g. https://abcd1234.supabase.co
-  SUPABASE_URL: 'https://YOUR_PROJECT_REF.supabase.co',
+  SUPABASE_URL: 'https://cxreyjttrzkbixzxdssb.supabase.co',
   // the "anon"/"publishable" key from Supabase → Project Settings → API
-  SUPABASE_ANON_KEY: 'YOUR_SUPABASE_ANON_KEY',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4cmV5anR0cnprYml4enhkc3NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzEwMjksImV4cCI6MjA5OTA0NzAyOX0.-XzUjHd17F3luFU4Pwd8f5SHf-8mqEhZJp0XaM3_Ok8',
   // shown as the reachable contact on the site
   CONTACT_EMAIL: 'hello@aterrabuilders.com',
   CONTACT_PHONE: '(214) 555-0143',
