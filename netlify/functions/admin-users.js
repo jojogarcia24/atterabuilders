@@ -66,7 +66,9 @@ exports.handler = async (event) => {
       method: 'PATCH', headers: { ...svc(), Prefer: 'return=minimal' },
       body: JSON.stringify({ role: 'admin', full_name: name || email })
     }).catch(() => {});
-    return json(200, { ok: true, email, temp_password: pw });
+    // best-effort: email them a link to set their own password (works once SMTP is configured)
+    const emailed = await sendSetupEmail(email);
+    return json(200, { ok: true, email, temp_password: pw, emailed: emailed });
   }
 
   // 3) reset a user's password (by user id or email)
@@ -91,3 +93,14 @@ exports.handler = async (event) => {
 };
 
 function svc() { return { apikey: SR, Authorization: 'Bearer ' + SR, 'Content-Type': 'application/json' }; }
+
+// best-effort password-setup email via Supabase recovery (no-op until SMTP is configured)
+async function sendSetupEmail(email) {
+  try {
+    const redirect = (process.env.ATERRA_SITE_URL || 'https://aterrabuilders.com') + '/set-password.html';
+    const r = await fetch(SUPABASE_URL + '/auth/v1/recover?redirect_to=' + encodeURIComponent(redirect), {
+      method: 'POST', headers: { apikey: ANON, 'Content-Type': 'application/json' }, body: JSON.stringify({ email })
+    });
+    return r.ok;
+  } catch (_) { return false; }
+}

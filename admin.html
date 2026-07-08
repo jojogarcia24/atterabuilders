@@ -177,7 +177,7 @@
           <button type="submit" class="ghost solid" style="justify-self:start">Add admin</button>
           <p id="team-note" class="form-note" role="status" aria-live="polite"></p>
         </form>
-        <p class="sub" style="color:var(--muted);font-size:.8rem;margin-top:.6rem">A temporary password is generated — copy it and send it to them. They can change it in-app with the <strong>Password</strong> button after signing in.</p>
+        <p class="sub" style="color:var(--muted);font-size:.8rem;margin-top:.6rem">Once email is set up, new admins get a link to set their own password. Until then, a temporary password is shown for you to send — they change it with the <strong>Password</strong> button after signing in.</p>
       </div>
       <div class="card tablescroll"><div id="team-box"></div></div>
     </section>
@@ -292,8 +292,12 @@
     note($('#team-note'), 'Creating admin…');
     callFn('admin-users', { action: 'invite', email: email, name: name }).then(function (res) {
       if (res.ok && res.j.ok) {
-        note($('#team-note'), 'Admin created. Send them this temporary password →', 'ok');
-        window.prompt('Temporary password for ' + email + ' — copy and send it to them (they change it after signing in):', res.j.temp_password);
+        if (res.j.emailed) {
+          note($('#team-note'), 'Admin created — we emailed ' + email + ' a link to set their password.', 'ok');
+        } else {
+          note($('#team-note'), 'Admin created. Email isn’t set up yet — send them this temp password →', 'ok');
+          window.prompt('Temp password for ' + email + ' — copy and send it (they change it after signing in):', res.j.temp_password);
+        }
         $('#team-form').reset(); loadAll();
       } else { note($('#team-note'), 'Could not add: ' + (res.j.error || 'error'), 'err'); }
     }).catch(function () { note($('#team-note'), 'Network error.', 'err'); })
@@ -306,7 +310,8 @@
     var email = ($('#ad-email').value || window.prompt('Enter your admin email to reset:') || '').trim();
     if (!email) return;
     note($('#login-note'), 'Sending reset email…');
-    fetch(SB + '/auth/v1/recover', {
+    var redir = encodeURIComponent((cfg.SITE_URL || 'https://aterrabuilders.com').replace(/\/$/, '') + '/set-password.html');
+    fetch(SB + '/auth/v1/recover?redirect_to=' + redir, {
       method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: email })
     }).then(function (r) {
