@@ -5,6 +5,14 @@
   publish = "."
   functions = "netlify/functions"
 
+# These keys are PUBLIC by design (client-side Supabase anon key, project URL,
+# and the VAPID *public* key) and intentionally live in config.js. Exclude them
+# from Netlify secrets scanning so the deploy doesn't fail on them. The truly
+# secret values (service_role, Resend, VAPID private) are only in Netlify env
+# vars, never committed, so they remain scanned.
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "SUPABASE_URL,SUPABASE_ANON_KEY,VAPID_PUBLIC_KEY"
+
 [functions]
   node_bundler = "esbuild"
 
