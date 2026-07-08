@@ -173,6 +173,29 @@ section{padding:clamp(5rem,12vh,10rem) var(--gutter)}
   text-shadow:0 2px 24px rgba(0,0,0,.35)}
 .svc-card .desc{padding:1.25rem .1rem 0;font-weight:300;color:var(--muted);font-size:.99rem;max-width:40ch}
 
+/* HOME — coming-soon property cards (service-card visual language) */
+.prop-cards{display:grid;grid-template-columns:1fr;gap:clamp(1.4rem,3vw,2.2rem)}
+@media(min-width:720px){.prop-cards{grid-template-columns:repeat(2,1fr)}}
+.prop-card{display:block}
+.prop-card .img{position:relative;aspect-ratio:4/3;overflow:hidden;background:var(--sand)}
+.prop-card .img img{width:100%;height:100%;object-fit:cover;transition:transform 1.2s cubic-bezier(.2,.7,.2,1)}
+.prop-card:hover .img img{transform:scale(1.05)}
+.prop-card .img::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(0,0,0,.18) 0%,rgba(0,0,0,0) 36%,rgba(0,0,0,.14) 58%,rgba(12,12,12,.74) 100%)}
+.prop-card .badge{position:absolute;top:1rem;left:1rem;z-index:3;background:rgba(22,22,22,.82);
+  color:var(--paper);font-size:.58rem;font-weight:600;letter-spacing:.24em;text-transform:uppercase;
+  padding:.55em 1.1em;backdrop-filter:blur(4px)}
+.prop-card .cap{position:absolute;left:0;right:0;bottom:0;padding:1.6rem 1.6rem;color:var(--paper);z-index:2}
+.prop-card .cap h3{font-family:var(--f-display);font-weight:500;font-size:1.65rem;text-shadow:0 2px 24px rgba(0,0,0,.4)}
+.prop-card .cap .loc{font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(250,249,245,.86);margin-top:.4rem}
+.prop-card .meta{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:1.15rem .1rem 0}
+.prop-card .meta .price{font-family:var(--f-display);font-size:1.25rem;color:var(--ink)}
+.prop-card .meta .link{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);
+  border-bottom:1px solid var(--ink);padding-bottom:2px}
+
+/* founder portrait image fit */
+.founder .portrait img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+
 /* ASSURANCES (why build with us) */
 .assur .head{margin-bottom:3.4rem;max-width:var(--maxw)}
 .assur h2{font-family:var(--f-display);font-weight:500;font-size:clamp(1.9rem,4.4vw,3.4rem);

@@ -103,10 +103,19 @@
     <a href="index.html" class="wordmark">ATERRA<small>BUILDERS</small></a>
     <div class="who">
       <span id="who-email"></span>
+      <button id="btn-pw" class="btn">Password</button>
       <button id="btn-notify" class="btn" style="display:none">Enable alerts</button>
       <button id="btn-refresh" class="btn">Refresh</button>
       <button id="btn-signout" class="btn solid">Sign out</button>
     </div>
+  </div>
+
+  <div id="pw-panel" style="display:none;background:#FFFFFF;border-bottom:1px solid var(--hair);padding:1rem clamp(1rem,4vw,2.4rem)">
+    <form id="pw-form" style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;max-width:1200px;margin:0 auto">
+      <input id="pw-new" type="password" placeholder="New password (min 8 characters)" autocomplete="new-password" style="font-family:var(--f-ui);font-size:.95rem;border:1px solid var(--hair);padding:.7em 1em;min-width:16rem;flex:1">
+      <button class="btn solid" type="submit">Update password</button>
+      <span id="pw-note" class="form-note" style="margin:0"></span>
+    </form>
   </div>
 
   <div class="dash">
@@ -189,6 +198,25 @@
     session = null; localStorage.removeItem(SKEY); location.reload();
   });
   $('#btn-refresh').addEventListener('click', loadAll);
+
+  // ---- change password (authenticated update; no recovery email needed) ----
+  $('#btn-pw').addEventListener('click', function () {
+    var p = $('#pw-panel'); p.style.display = p.style.display === 'none' ? 'block' : 'none';
+  });
+  $('#pw-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var np = $('#pw-new').value;
+    if (!np || np.length < 8) { note($('#pw-note'), 'Use at least 8 characters.', 'err'); return; }
+    var btn = e.target.querySelector('button'); btn.disabled = true;
+    note($('#pw-note'), 'Updating…');
+    fetch(SB + '/auth/v1/user', { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ password: np }) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        if (res.ok) { note($('#pw-note'), 'Password updated.', 'ok'); $('#pw-new').value = ''; }
+        else { note($('#pw-note'), res.j.msg || res.j.error_description || res.j.error || 'Could not update.', 'err'); }
+      }).catch(function () { note($('#pw-note'), 'Network error.', 'err'); })
+      .finally(function () { btn.disabled = false; });
+  });
 
   // ---- tabs ----
   document.querySelectorAll('.tab').forEach(function (t) {
