@@ -13,5 +13,7 @@ window.ATERRA_CONFIG = {
   CONTACT_EMAIL: 'hello@aterrabuilders.com',
   CONTACT_PHONE: '(214) 555-0143',
   // GoHighLevel inbound webhook — website inquiries are POSTed here (first/last, email, phone, info)
-  GHL_WEBHOOK_URL: 'https://services.leadconnectorhq.com/hooks/31O0ifgQrABoS9mspyTw/webhook-trigger/ab2a78b6-5b9d-4b5e-94d5-cf8e9fd841c2'
+  GHL_WEBHOOK_URL: 'https://services.leadconnectorhq.com/hooks/31O0ifgQrABoS9mspyTw/webhook-trigger/ab2a78b6-5b9d-4b5e-94d5-cf8e9fd841c2',
+  // VAPID public key (safe to expose) — enables the "Enable alerts" button in the admin
+  VAPID_PUBLIC_KEY: 'BLykhcwDrl5i2B4ICax-USBFB2i5tBt9-vSOg4AgPv-vQRyy1PfqgSXPf56iFSJ0GRFf_oYuLZWAZ36RCryUXyQ'
 };
