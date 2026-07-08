@@ -1,0 +1,35 @@
+<!-- ATERRA BUILDERS — Admin/Builder alert: NEW LEAD (contact-form inquiry)
+     Subject: 🏛 New inquiry — {{inboundWebhookRequest.first_name}} {{inboundWebhookRequest.last_name}} ({{inboundWebhookRequest.project_type}})
+     Fields come straight from the LEAD webhook payload. -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F6F3;margin:0;padding:32px 12px;font-family:Arial,Helvetica,sans-serif;">
+  <tr><td align="center">
+    <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#FFFFFF;border:1px solid #E6E5E1;">
+      <tr><td style="padding:34px 44px 0;text-align:center;">
+        <div style="font-family:Georgia,'Times New Roman',serif;font-size:21px;letter-spacing:8px;color:#161616;font-weight:500;">ATERRA</div>
+        <div style="font-size:9px;letter-spacing:6px;color:#8C8A85;margin-top:7px;">BUILDERS</div>
+      </td></tr>
+      <tr><td style="padding:30px 44px 0;">
+        <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#8C8A85;">New website inquiry</div>
+        <h1 style="font-family:Georgia,'Times New Roman',serif;font-weight:500;font-size:28px;line-height:1.15;color:#161616;margin:10px 0 0;">{{inboundWebhookRequest.first_name}} {{inboundWebhookRequest.last_name}}</h1>
+      </td></tr>
+      <tr><td style="padding:24px 44px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#161616;">
+          <tr><td style="padding:12px 0;border-top:1px solid #E6E5E1;width:34%;color:#8C8A85;text-transform:uppercase;letter-spacing:1px;font-size:11px;">Email</td>
+              <td style="padding:12px 0;border-top:1px solid #E6E5E1;"><a href="mailto:{{inboundWebhookRequest.email}}" style="color:#161616;">{{inboundWebhookRequest.email}}</a></td></tr>
+          <tr><td style="padding:12px 0;border-top:1px solid #E6E5E1;color:#8C8A85;text-transform:uppercase;letter-spacing:1px;font-size:11px;">Phone</td>
+              <td style="padding:12px 0;border-top:1px solid #E6E5E1;"><a href="tel:{{inboundWebhookRequest.phone}}" style="color:#161616;">{{inboundWebhookRequest.phone}}</a></td></tr>
+          <tr><td style="padding:12px 0;border-top:1px solid #E6E5E1;color:#8C8A85;text-transform:uppercase;letter-spacing:1px;font-size:11px;">Project</td>
+              <td style="padding:12px 0;border-top:1px solid #E6E5E1;">{{inboundWebhookRequest.project_type}}</td></tr>
+          <tr><td style="padding:12px 0;border-top:1px solid #E6E5E1;color:#8C8A85;text-transform:uppercase;letter-spacing:1px;font-size:11px;vertical-align:top;">Message</td>
+              <td style="padding:12px 0;border-top:1px solid #E6E5E1;color:#6E6C67;line-height:1.6;">{{inboundWebhookRequest.message}}</td></tr>
+        </table>
+      </td></tr>
+      <tr><td style="padding:26px 44px 0;">
+        <a href="mailto:{{inboundWebhookRequest.email}}" style="display:inline-block;background:#161616;color:#FFFFFF;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;padding:14px 30px;">Reply to {{inboundWebhookRequest.first_name}}</a>
+      </td></tr>
+      <tr><td style="padding:30px 44px 34px;margin-top:20px;border-top:1px solid #E6E5E1;text-align:center;">
+        <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#8C8A85;">Aterra Builders · Lead notification</div>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
