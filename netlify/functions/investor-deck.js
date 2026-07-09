@@ -101,6 +101,9 @@ const STYLE = `
   .cta h2{color:var(--paper)}.cta p{color:rgba(250,249,245,.7)}
   .badge{display:inline-block;font-size:.6rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;background:var(--gold);color:#fff;padding:.4em 1em;margin-bottom:1rem}
   .foothint{font-size:.78rem;color:var(--muted);margin-top:1.2rem}
+  .maplegend{display:flex;flex-wrap:wrap;gap:.55rem 1.5rem;margin-top:1.1rem;padding-top:1.1rem;border-top:1px solid var(--hair);font-size:.86rem;color:var(--muted)}
+  .maplegend span{display:flex;align-items:center;gap:.55rem}
+  .maplegend b{display:inline-flex;align-items:center;justify-content:center;width:1.5em;height:1.5em;border-radius:50%;background:var(--ink);color:#fff;font-size:.72rem;font-weight:600;flex:none}
 
   /* ---- editorial hero + motion ---- */
   .hero{position:relative;min-height:100svh;display:flex;align-items:center;justify-content:center;
@@ -275,42 +278,61 @@ function deck(name) {
 <section><div class="wrap"><div class="eyebrow">Market Geography · The Marsh Line</div>
   <h2>We know exactly where value lives — down to the street.</h2>
   <p class="lead">Our core pocket — Northaven to Royal, Webb Chapel to Marsh — trades around <strong>$377/SF</strong>. One street east, across Marsh Lane, the same square footage sells for <strong>$541/SF</strong>. Knowing precisely where that line sits — and buying right up against it — is the edge.</p>
-  <div style="margin-top:2.2rem;border:1px solid var(--hair);background:var(--paper2);padding:clamp(.6rem,2vw,1.4rem);overflow-x:auto">
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 640" style="width:100%;height:auto;display:block;min-width:640px" font-family="Inter, system-ui, sans-serif">
-  <rect x="0" y="0" width="1160" height="640" fill="#F7F6F3"/>
-  <g stroke="#E1E0DC" stroke-width="1">
-    <line x1="120" y1="150" x2="1040" y2="150"/><line x1="120" y1="215" x2="1040" y2="215"/>
-    <line x1="120" y1="285" x2="1040" y2="285"/><line x1="120" y1="355" x2="1040" y2="355"/>
-    <line x1="120" y1="425" x2="1040" y2="425"/><line x1="120" y1="495" x2="1040" y2="495"/>
-    <line x1="210" y1="120" x2="210" y2="520"/><line x1="330" y1="120" x2="330" y2="520"/>
-    <line x1="450" y1="120" x2="450" y2="520"/><line x1="570" y1="120" x2="570" y2="520"/>
-    <line x1="850" y1="120" x2="850" y2="520"/><line x1="960" y1="120" x2="960" y2="520"/>
+  <div style="margin-top:2.2rem;border:1px solid var(--hair);background:var(--paper2);padding:clamp(.7rem,2.5vw,1.4rem)">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" style="width:100%;height:auto;display:block" font-family="Inter, system-ui, sans-serif">
+  <rect x="0" y="0" width="900" height="620" fill="#F1F3EF"/>
+  <!-- park blocks for map feel -->
+  <rect x="150" y="470" width="70" height="40" fill="#D9E6DA" opacity="0"/>
+  <!-- street grid -->
+  <g stroke="#DCDBD6" stroke-width="6" opacity="0.55">
+    <line x1="60" y1="140" x2="840" y2="140"/><line x1="60" y1="240" x2="840" y2="240"/>
+    <line x1="60" y1="340" x2="840" y2="340"/><line x1="60" y1="440" x2="840" y2="440"/>
+    <line x1="200" y1="90" x2="200" y2="500"/><line x1="330" y1="90" x2="330" y2="500"/>
+    <line x1="460" y1="90" x2="460" y2="500"/><line x1="720" y1="90" x2="720" y2="500"/>
   </g>
-  <polygon points="210,150 700,150 700,495 210,495" fill="#161616" fill-opacity="0.055" stroke="#8C8A85" stroke-width="1.5" stroke-dasharray="6 5"/>
-  <line x1="700" y1="95" x2="700" y2="545" stroke="#161616" stroke-width="4"/>
-  <text x="700" y="80" text-anchor="middle" fill="#161616" font-size="19" font-weight="600" letter-spacing="3">MARSH LANE</text>
-  <text x="700" y="565" text-anchor="middle" fill="#8C8A85" font-size="13" letter-spacing="2">THE PRICE LINE</text>
-  <text x="215" y="140" fill="#6E6C67" font-size="12.5" letter-spacing="1">Northaven Rd</text>
-  <text x="215" y="514" fill="#6E6C67" font-size="12.5" letter-spacing="1">Royal Ln</text>
-  <text x="132" y="315" fill="#6E6C67" font-size="12.5" letter-spacing="1" transform="rotate(-90 132 315)">Webb Chapel Rd</text>
-  <text x="250" y="185" fill="#161616" font-size="17" font-weight="600" letter-spacing="2">ATTERRA CORE POCKET</text>
-  <text x="250" y="207" fill="#8C8A85" font-size="12.5" letter-spacing="1">75229 · new-construction average ≈ $377/SF</text>
-  <g font-size="12.5" fill="#161616">
-    <circle cx="290" cy="320" r="7" fill="#161616"/><text x="304" y="324">3316 Townsend · 5,500 SF · active build</text>
-    <circle cx="290" cy="250" r="7" fill="#161616"/><text x="304" y="254">3239 Whitehall · $417/SF · under contract</text>
-    <circle cx="290" cy="390" r="7" fill="#161616"/><text x="304" y="394">3229 Jubilee · $420/SF · coming soon</text>
+  <!-- core pocket -->
+  <polygon points="120,140 590,140 590,470 120,470" fill="#161616" fill-opacity="0.06" stroke="#8C8A85" stroke-width="2.5" stroke-dasharray="9 7"/>
+  <!-- Marsh divider (bold road) -->
+  <line x1="590" y1="70" x2="590" y2="520" stroke="#161616" stroke-width="9"/>
+  <text x="590" y="52" text-anchor="middle" fill="#161616" font-size="27" font-weight="700" letter-spacing="2">MARSH LN</text>
+  <!-- compass -->
+  <g transform="translate(820,110)">
+    <circle r="26" fill="#fff" stroke="#C9C7C1" stroke-width="1.5"/>
+    <path d="M0,-19 L7,6 L0,0 L-7,6 Z" fill="#B23A2E"/>
+    <text x="0" y="-30" text-anchor="middle" fill="#6E6C67" font-size="15" font-weight="600">N</text>
   </g>
-  <circle cx="820" cy="360" r="9" fill="#B23A2E"/>
-  <circle cx="820" cy="360" r="17" fill="none" stroke="#B23A2E" stroke-width="2"/>
-  <text x="845" y="356" fill="#161616" font-size="13.5" font-weight="600">3787 Vinecrest</text>
-  <text x="845" y="375" fill="#6E6C67" font-size="12.5">5,342 SF · listed $2.89M · $541/SF</text>
-  <text x="455" y="452" text-anchor="middle" fill="#161616" font-size="22" font-weight="600" font-family="'Bodoni Moda', Georgia, serif">$377/SF</text>
-  <line x1="530" y1="446" x2="770" y2="446" stroke="#B23A2E" stroke-width="2"/>
-  <polygon points="770,446 758,440 758,452" fill="#B23A2E"/>
-  <text x="820" y="452" text-anchor="middle" fill="#B23A2E" font-size="22" font-weight="600" font-family="'Bodoni Moda', Georgia, serif">$541/SF</text>
-  <text x="650" y="432" text-anchor="middle" fill="#8C8A85" font-size="12" letter-spacing="1">cross Marsh</text>
-  <text x="580" y="605" text-anchor="middle" fill="#6E6C67" font-size="13.5">One street across Marsh, price jumps <tspan font-weight="600" fill="#161616">+$164/SF</tspan> — roughly <tspan font-weight="600" fill="#161616">$870K</tspan> on a 5,300 SF home.</text>
-  </svg>
+  <!-- road labels -->
+  <text x="132" y="128" fill="#6E6C67" font-size="18">Northaven Rd</text>
+  <text x="132" y="492" fill="#6E6C67" font-size="18">Royal Ln</text>
+  <text x="86" y="300" fill="#6E6C67" font-size="18" transform="rotate(-90 86 300)">Webb Chapel Rd</text>
+  <!-- pocket title + price -->
+  <text x="150" y="185" fill="#161616" font-size="23" font-weight="700" letter-spacing="1.5">ATTERRA CORE POCKET</text>
+  <text x="150" y="255" fill="#161616" font-size="52" font-weight="700" font-family="'Bodoni Moda',Georgia,serif">$377</text>
+  <text x="285" y="255" fill="#6E6C67" font-size="22">/SF avg</text>
+  <!-- numbered property markers -->
+  <g font-size="21" font-weight="700" fill="#fff" font-family="Inter,sans-serif">
+    <circle cx="230" cy="330" r="17" fill="#161616"/><text x="230" y="337" text-anchor="middle">1</text>
+    <circle cx="330" cy="330" r="17" fill="#161616"/><text x="330" y="337" text-anchor="middle">2</text>
+    <circle cx="430" cy="330" r="17" fill="#161616"/><text x="430" y="337" text-anchor="middle">3</text>
+  </g>
+  <!-- Vinecrest across Marsh -->
+  <circle cx="660" cy="300" r="14" fill="#B23A2E"/>
+  <circle cx="660" cy="300" r="25" fill="none" stroke="#B23A2E" stroke-width="3"/>
+  <text x="640" y="360" fill="#161616" font-size="21" font-weight="700">3787 VINECREST</text>
+  <text x="700" y="300" fill="#161616" font-size="52" font-weight="700" font-family="'Bodoni Moda',Georgia,serif" dominant-baseline="middle">$541</text>
+  <text x="700" y="335" fill="#6E6C67" font-size="20">/SF</text>
+  <!-- cross-marsh arrow -->
+  <text x="300" y="555" text-anchor="middle" fill="#161616" font-size="30" font-weight="700" font-family="'Bodoni Moda',Georgia,serif">$377</text>
+  <line x1="370" y1="548" x2="560" y2="548" stroke="#B23A2E" stroke-width="3"/>
+  <polygon points="560,548 545,541 545,555" fill="#B23A2E"/>
+  <text x="470" y="533" text-anchor="middle" fill="#8C8A85" font-size="16" letter-spacing="1">cross Marsh · +$164/SF</text>
+  <text x="640" y="555" text-anchor="middle" fill="#B23A2E" font-size="30" font-weight="700" font-family="'Bodoni Moda',Georgia,serif">$541</text>
+</svg>
+  <div class="maplegend">
+    <span><b>1</b> 3239 Whitehall · $417/SF · under contract</span>
+    <span><b>2</b> 3316 Townsend · 5,500 SF · active build</span>
+    <span><b>3</b> 3229 Jubilee · $420/SF · coming soon</span>
+  </div>
   </div>
   <div class="cols c3" style="margin-top:2rem">
     <div class="card stat"><div class="n">$377/SF</div><div class="l">Core pocket · new-construction avg</div></div>
