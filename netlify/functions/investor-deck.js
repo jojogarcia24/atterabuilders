@@ -251,24 +251,73 @@ function deck(name) {
     <h2>3316 Townsend Drive</h2>
     <p style="color:rgba(250,249,245,.75);margin-top:1rem;max-width:60ch">The next build — acquired and financed. A 5,500 SF transitional modern, priced off Whitehall’s proven $/SF.</p>
     <div class="grid">
-      <div><div class="n">$535K</div><div class="l">Acquisition · Jun 2026</div></div>
+      <div><div class="n">$507K</div><div class="l">Acquisition · Jun 2026</div></div>
       <div><div class="n">$1.07M</div><div class="l">Build budget</div></div>
-      <div><div class="n">≈ $1.77M</div><div class="l">All-in cost</div></div>
-      <div><div class="n">$2.37M</div><div class="l">Target · $430/SF</div></div>
+      <div><div class="n">≈ $1.64M</div><div class="l">All-in incl. carry</div></div>
+      <div><div class="n">$2.31M</div><div class="l">Target · $420/SF</div></div>
     </div>
-    <div class="foot">≈ $595,000 target gross spread — 5,500 SF at $430/SF, proven by Whitehall.</div>
+    <div class="foot">≈ $672,000 gross / ≈ $556,000 net at $420/SF — after carrying and sale costs.</div>
   </div>
-  <p class="foothint">Acquisition &amp; loan from the recorded settlement statement (6/24/2026); build from the project budget. Target value at $430/SF × 5,500 SF.</p>
+  <p class="foothint">Acquisition from the recorded settlement statement (6/24/2026): $500,000 purchase price, $507K all-in. Build from the project budget ($1,067,325, incl. 5% contingency). All-in adds ~6% carrying; target value at $420/SF × 5,500 SF, net of ~5% sale costs — with the listing side captured in-house.</p>
 </div></section>
 
 <section><div class="wrap"><div class="eyebrow">Comparable Sales</div><h2>The value is on the comps.</h2>
-  <p class="lead">Recent finished sales in 75229 — five-bedroom new construction. Whitehall at $417/SF sits at the top; Townsend’s $430/SF target is the size premium.</p>
-  <table class="table"><thead><tr><th>Address</th><th>Sold</th><th>$/SF</th><th>Beds/Baths</th><th>SF</th></tr></thead><tbody>
-    <tr><td>3179 Jubilee Trail</td><td class="n">$1,800,000</td><td class="n">$372</td><td>5 / 4.5</td><td>4,837</td></tr>
-    <tr><td>3341 Dothan Lane</td><td class="n">$1,820,000</td><td class="n">$404</td><td>5 / 5</td><td>4,509</td></tr>
-    <tr><td>3252 Jubilee Trail</td><td class="n">$1,899,000</td><td class="n">$372</td><td>5 / 5</td><td>5,110</td></tr>
-    <tr><td><strong>3239 Whitehall (ours)</strong></td><td class="n">$1,825,000</td><td class="n"><strong>$417</strong></td><td>5 / 5.5</td><td>4,375</td></tr>
+  <p class="lead">Recent finished sales in 75229 — five-bedroom new construction, from the July 2026 market analysis. Whitehall at $417/SF sits at the top; Townsend’s $420/SF target is the size premium.</p>
+  <table class="table"><thead><tr><th>Address</th><th>Price</th><th>$/SF</th><th>SF</th><th>Status</th></tr></thead><tbody>
+    <tr><td>3629 Vancouver Dr</td><td class="n">$1,785,000</td><td class="n">$387</td><td>4,609</td><td>Closed</td></tr>
+    <tr><td>3207 Latham Dr</td><td class="n">$1,800,000</td><td class="n">$369</td><td>4,876</td><td>Closed</td></tr>
+    <tr><td>10917 Beauty Ln</td><td class="n">$1,816,000</td><td class="n">$397</td><td>4,573</td><td>Closed</td></tr>
+    <tr><td>3252 Jubilee Trail</td><td class="n">$1,899,000</td><td class="n">$372</td><td>5,110</td><td>Closed</td></tr>
+    <tr><td><strong>3239 Whitehall (ours)</strong></td><td class="n">$1,825,000</td><td class="n"><strong>$417</strong></td><td>4,375</td><td>Under contract</td></tr>
   </tbody></table>
+</div></section>
+
+<section><div class="wrap"><div class="eyebrow">Market Geography · The Marsh Line</div>
+  <h2>We know exactly where value lives — down to the street.</h2>
+  <p class="lead">Our core pocket — Northaven to Royal, Webb Chapel to Marsh — trades around <strong>$377/SF</strong>. One street east, across Marsh Lane, the same square footage sells for <strong>$541/SF</strong>. Knowing precisely where that line sits — and buying right up against it — is the edge.</p>
+  <div style="margin-top:2.2rem;border:1px solid var(--hair);background:var(--paper2);padding:clamp(.6rem,2vw,1.4rem);overflow-x:auto">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 640" style="width:100%;height:auto;display:block;min-width:640px" font-family="Inter, system-ui, sans-serif">
+  <rect x="0" y="0" width="1160" height="640" fill="#F7F6F3"/>
+  <g stroke="#E1E0DC" stroke-width="1">
+    <line x1="120" y1="150" x2="1040" y2="150"/><line x1="120" y1="215" x2="1040" y2="215"/>
+    <line x1="120" y1="285" x2="1040" y2="285"/><line x1="120" y1="355" x2="1040" y2="355"/>
+    <line x1="120" y1="425" x2="1040" y2="425"/><line x1="120" y1="495" x2="1040" y2="495"/>
+    <line x1="210" y1="120" x2="210" y2="520"/><line x1="330" y1="120" x2="330" y2="520"/>
+    <line x1="450" y1="120" x2="450" y2="520"/><line x1="570" y1="120" x2="570" y2="520"/>
+    <line x1="850" y1="120" x2="850" y2="520"/><line x1="960" y1="120" x2="960" y2="520"/>
+  </g>
+  <polygon points="210,150 700,150 700,495 210,495" fill="#161616" fill-opacity="0.055" stroke="#8C8A85" stroke-width="1.5" stroke-dasharray="6 5"/>
+  <line x1="700" y1="95" x2="700" y2="545" stroke="#161616" stroke-width="4"/>
+  <text x="700" y="80" text-anchor="middle" fill="#161616" font-size="19" font-weight="600" letter-spacing="3">MARSH LANE</text>
+  <text x="700" y="565" text-anchor="middle" fill="#8C8A85" font-size="13" letter-spacing="2">THE PRICE LINE</text>
+  <text x="215" y="140" fill="#6E6C67" font-size="12.5" letter-spacing="1">Northaven Rd</text>
+  <text x="215" y="514" fill="#6E6C67" font-size="12.5" letter-spacing="1">Royal Ln</text>
+  <text x="132" y="315" fill="#6E6C67" font-size="12.5" letter-spacing="1" transform="rotate(-90 132 315)">Webb Chapel Rd</text>
+  <text x="250" y="185" fill="#161616" font-size="17" font-weight="600" letter-spacing="2">ATTERRA CORE POCKET</text>
+  <text x="250" y="207" fill="#8C8A85" font-size="12.5" letter-spacing="1">75229 · new-construction average ≈ $377/SF</text>
+  <g font-size="12.5" fill="#161616">
+    <circle cx="290" cy="320" r="7" fill="#161616"/><text x="304" y="324">3316 Townsend · 5,500 SF · active build</text>
+    <circle cx="290" cy="250" r="7" fill="#161616"/><text x="304" y="254">3239 Whitehall · $417/SF · under contract</text>
+    <circle cx="290" cy="390" r="7" fill="#161616"/><text x="304" y="394">3229 Jubilee · $420/SF · coming soon</text>
+  </g>
+  <circle cx="820" cy="360" r="9" fill="#B23A2E"/>
+  <circle cx="820" cy="360" r="17" fill="none" stroke="#B23A2E" stroke-width="2"/>
+  <text x="845" y="356" fill="#161616" font-size="13.5" font-weight="600">3787 Vinecrest</text>
+  <text x="845" y="375" fill="#6E6C67" font-size="12.5">5,342 SF · listed $2.89M · $541/SF</text>
+  <text x="455" y="452" text-anchor="middle" fill="#161616" font-size="22" font-weight="600" font-family="'Bodoni Moda', Georgia, serif">$377/SF</text>
+  <line x1="530" y1="446" x2="770" y2="446" stroke="#B23A2E" stroke-width="2"/>
+  <polygon points="770,446 758,440 758,452" fill="#B23A2E"/>
+  <text x="820" y="452" text-anchor="middle" fill="#B23A2E" font-size="22" font-weight="600" font-family="'Bodoni Moda', Georgia, serif">$541/SF</text>
+  <text x="650" y="432" text-anchor="middle" fill="#8C8A85" font-size="12" letter-spacing="1">cross Marsh</text>
+  <text x="580" y="605" text-anchor="middle" fill="#6E6C67" font-size="13.5">One street across Marsh, price jumps <tspan font-weight="600" fill="#161616">+$164/SF</tspan> — roughly <tspan font-weight="600" fill="#161616">$870K</tspan> on a 5,300 SF home.</text>
+  </svg>
+  </div>
+  <div class="cols c3" style="margin-top:2rem">
+    <div class="card stat"><div class="n">$377/SF</div><div class="l">Core pocket · new-construction avg</div></div>
+    <div class="card stat"><div class="n">$541/SF</div><div class="l">Across Marsh · 3787 Vinecrest</div></div>
+    <div class="card stat"><div class="n">+$164/SF</div><div class="l">The Marsh premium · ≈ $870K / home</div></div>
+  </div>
+  <p class="foothint">3787 Vinecrest — 5,342 SF, listed at $2.89M ($541/SF) — sits just across Marsh. We don’t underwrite that premium into our deals; we simply have our hand on the pulse of exactly where it begins. $/SF figures from the July 2026 market analysis.</p>
 </div></section>
 
 <section class="sand" style="background:var(--sand)"><div class="wrap"><div class="eyebrow">The Investment</div><h2>How you participate.</h2>
@@ -285,29 +334,63 @@ function deck(name) {
 <section><div class="wrap"><div class="eyebrow">Investor Returns · Illustrative</div><h2>What you put in — and what comes back.</h2>
   <table class="table" style="max-width:640px"><tbody>
     <tr><td>Your capital in (incl. reserve)</td><td class="n" style="text-align:right">≈ $190,000</td></tr>
-    <tr><td>Net profit · after sale costs</td><td class="n" style="text-align:right">≈ $500,000</td></tr>
+    <tr><td>Net profit · after carrying &amp; sale costs</td><td class="n" style="text-align:right">≈ $450,000</td></tr>
     <tr><td>Your principal — returned first</td><td class="n" style="text-align:right">$190,000</td></tr>
-    <tr><td>Your profit share — 25% (1 of 4)</td><td class="n" style="text-align:right">≈ $125,000</td></tr>
-    <tr><td><strong>Total back to you</strong></td><td class="n" style="text-align:right"><strong>≈ $315,000</strong></td></tr>
+    <tr><td>Your profit share — 25% (1 of 4)</td><td class="n" style="text-align:right">≈ $113,000</td></tr>
+    <tr><td><strong>Total back to you</strong></td><td class="n" style="text-align:right"><strong>≈ $303,000</strong></td></tr>
   </tbody></table>
-  <p class="lead" style="margin-top:1.6rem">≈ <strong>$315,000 total back on ≈ $190,000 in</strong> — about a 1.65× return, ≈ 66% on capital, over a 6–8 month build. Based on Townsend’s target sale at $430/SF, net of ~$95K sale costs. Capital carries a reserve cushion and is at risk — see Risk &amp; Mitigation.</p>
+  <p class="lead" style="margin-top:1.6rem">≈ <strong>$303,000 total back on ≈ $190,000 in</strong> — about a 1.6× return, ≈ 59% on capital, over a 6–8 month build. Modeled conservatively on Townsend at $400/SF — the proven market max, below our $420 target — net of carrying and sale costs. Capital carries a reserve cushion and is at risk — see Risk &amp; Mitigation.</p>
 </div></section>
 
-<section class="sand" style="background:var(--sand)"><div class="wrap"><div class="eyebrow">Investor Returns · Scenarios</div><h2>Size and price both pay you.</h2>
-  <div class="scen">
-    <div class="box"><div class="tag">Market size · est.</div><div class="psf">$417/SF</div><div class="sf">4,400 SF home</div>
-      <div class="row"><span>Sale price</span><span>≈ $1.83M</span></div><div class="row"><span>Net profit</span><span>≈ $200K</span></div>
-      <div class="row"><span>Your 25% share</span><span>≈ $50K</span></div><div class="ret">≈ 28%</div><div class="sf">Return on ~$180K · ~8 mo</div></div>
-    <div class="box"><div class="tag">Our build · proven price</div><div class="psf">$417/SF</div><div class="sf">5,500 SF home</div>
-      <div class="row"><span>Sale price</span><span>≈ $2.29M</span></div><div class="row"><span>Net profit</span><span>≈ $430K</span></div>
-      <div class="row"><span>Your 25% share</span><span>≈ $108K</span></div><div class="ret">≈ 57%</div><div class="sf">Return on ~$190K · ~8 mo</div></div>
-    <div class="box hi"><div class="tag" style="color:var(--gold)">Our build · target</div><div class="psf">$430/SF</div><div class="sf" style="color:rgba(250,249,245,.7)">5,500 SF home</div>
-      <div class="row" style="border-color:rgba(250,249,245,.2)"><span style="color:rgba(250,249,245,.7)">Sale price</span><span>≈ $2.37M</span></div>
-      <div class="row" style="border-color:rgba(250,249,245,.2)"><span style="color:rgba(250,249,245,.7)">Net profit</span><span>≈ $500K</span></div>
-      <div class="row" style="border-color:rgba(250,249,245,.2)"><span style="color:rgba(250,249,245,.7)">Your 25% share</span><span>≈ $125K</span></div>
-      <div class="ret">≈ 66%</div><div class="sf" style="color:rgba(250,249,245,.7)">Return on ~$190K · ~8 mo</div></div>
+<section class="sand" style="background:var(--sand)"><div class="wrap"><div class="eyebrow">Development Pro Forma · By Size &amp; Price</div>
+  <h2>Every size, every price — it pays.</h2>
+  <p class="lead">One cost model, built from real numbers and underwritten conservatively: land at our Townsend basis of <strong>$507K</strong>, construction at <strong>$194/SF</strong> (the actual Townsend budget), <strong>carrying at ~6%</strong> of build (interest, taxes, insurance, utilities over the 6–8 month hold), and <strong>sale costs at 5%</strong>. <em>Net profit</em> is project-level after every cost; <em>Your 25%</em> is the investor’s profit share after principal is returned.</p>
+
+  <div class="cols c2" style="margin-top:2.4rem">
+    <div class="card">
+      <h3>4,300 SF home</h3>
+      <div class="eyebrow" style="color:var(--gold);margin:.55rem 0 0">All-in ≈ $1.39M · land $507K + build $834K + carry $50K</div>
+      <table class="table" style="margin-top:1.1rem">
+        <thead><tr><th>Reality</th><th>$/SF</th><th>Sale</th><th>Net profit</th><th>Your 25%</th></tr></thead>
+        <tbody>
+          <tr><td>Current market</td><td class="n">$378</td><td class="n">$1.63M</td><td class="n">$153K</td><td class="n">$38K</td></tr>
+          <tr><td>Market max</td><td class="n">$400</td><td class="n">$1.72M</td><td class="n">$243K</td><td class="n">$61K</td></tr>
+          <tr><td><strong>Aterra target</strong></td><td class="n"><strong>$420</strong></td><td class="n">$1.81M</td><td class="n"><strong>$324K</strong></td><td class="n"><strong>$81K</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3>5,200 SF home</h3>
+      <div class="eyebrow" style="color:var(--gold);margin:.55rem 0 0">All-in ≈ $1.58M · land $507K + build $1.01M + carry $61K</div>
+      <table class="table" style="margin-top:1.1rem">
+        <thead><tr><th>Reality</th><th>$/SF</th><th>Sale</th><th>Net profit</th><th>Your 25%</th></tr></thead>
+        <tbody>
+          <tr><td>Current market</td><td class="n">$378</td><td class="n">$1.97M</td><td class="n">$291K</td><td class="n">$73K</td></tr>
+          <tr><td>Market max</td><td class="n">$400</td><td class="n">$2.08M</td><td class="n">$400K</td><td class="n">$100K</td></tr>
+          <tr><td><strong>Aterra target</strong></td><td class="n"><strong>$420</strong></td><td class="n">$2.18M</td><td class="n"><strong>$498K</strong></td><td class="n"><strong>$125K</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
-  <p class="foothint">Same lot, same system — home size and price both drive the return. Land is a fixed cost, so building the larger 5,500 SF home spreads it over more sellable feet. Even a market-size 4,400 SF home at the proven $417/SF returns ~28%. (4,400 SF cost estimated from Townsend’s per-foot budget.)</p>
+
+  <div class="deal" style="margin-top:1.8rem">
+    <div class="eyebrow">Stress Test · build runs 30% over</div>
+    <h2 style="font-size:clamp(1.4rem,3vw,2rem)">And if everything costs 30% more?</h2>
+    <p style="color:rgba(250,249,245,.78);margin-top:.9rem;max-width:66ch">We pressure-test every deal against a 30% hard-cost overrun — change orders, material spikes, delays, all of it. At our target price, both homes still clear a profit. Only a simultaneous 30% blow-out <em>and</em> a fall back to today’s average price would pressure the smaller home — which is exactly why we build larger and price to the target.</p>
+    <div style="display:grid;grid-template-columns:auto repeat(3,1fr);gap:.7rem 1.1rem;margin-top:1.8rem;align-items:baseline">
+      <div class="l">&nbsp;</div><div class="l">@ $378 · current</div><div class="l">@ $400 · max</div><div class="l">@ $420 · target</div>
+      <div class="l" style="color:var(--paper)">4,300 SF net</div><div class="n">−$112K</div><div class="n">−$23K</div><div class="n">+$59K</div>
+      <div class="l" style="color:var(--paper)">5,200 SF net</div><div class="n">−$30K</div><div class="n">+$79K</div><div class="n">+$178K</div>
+    </div>
+    <div class="foot" style="font-size:1.05rem;margin-top:1.6rem">At target pricing, a full 30% cost overrun still nets +$59K to +$178K — the deal survives its own worst case.</div>
+  </div>
+
+  <div class="card" style="margin-top:1.6rem;border-left:3px solid var(--gold)">
+    <div class="eyebrow" style="color:var(--gold)">Built-in upside · in-house listing</div>
+    <p style="margin-top:.6rem;color:var(--ink)">The net figures above already deduct a full 5% for sale costs. Because Atterra lists every home in-house, the <strong>~2.5–3% listing-side commission — roughly $45K–$65K per home</strong> — is captured by the team rather than paid out. That’s margin the model doesn’t even count.</p>
+  </div>
+
+  <p class="foothint">Base case includes carrying and sale costs. Land is a fixed cost, so the larger 5,200 SF home spreads it over more sellable feet — bigger home, fatter margin. $/SF anchors: current market $378 (blended new-construction comps), market max $400 (top closed comp — 10917 Beauty at $397/SF), Atterra target $420 (3239 Whitehall under contract at $417/SF; 3229 Jubilee coming soon, target $420/SF). Construction held flat at Townsend’s $194/SF; carrying ≈ 6% of build; stress test adds 30% to all hard costs.</p>
 </div></section>
 
 <section><div class="wrap"><div class="eyebrow">Use of Funds &amp; Timeline</div><h2>Where capital goes — and when it returns.</h2>
@@ -332,8 +415,8 @@ function deck(name) {
 
 <section class="sand" style="background:var(--sand)"><div class="wrap"><div class="eyebrow">Risk &amp; Mitigation</div><h2>We name the risks — and manage them.</h2>
   <div class="cols c2">
-    <div class="card"><h3>Market softening</h3><p>Conservative, data-backed values from Area Intel; we buy on a basis the comps support. Our conservative case prices at the proven $417/SF, not the $430 target.</p></div>
-    <div class="card"><h3>Cost overruns</h3><p>Trade pricing locked at this price point; 5%+ contingency; daily PM cost control in-app with a live ledger.</p></div>
+    <div class="card"><h3>Market softening</h3><p>Conservative, data-backed values from Area Intel; we buy on a basis the comps support. Our conservative case prices at today’s market, not the $420 target.</p></div>
+    <div class="card"><h3>Cost overruns</h3><p>Trade pricing locked at this price point; 5% contingency in every budget; daily PM cost control in-app with a live ledger. We underwrite each deal against a 30% hard-cost overrun — and it still profits at target pricing.</p></div>
     <div class="card"><h3>Timeline slippage</h3><p>6–8 month build against an 18-month loan — a wide buffer, with weekly oversight.</p></div>
     <div class="card"><h3>Leverage / first-loss</h3><p>Your capital sits in the equity position behind the construction loan. That’s why the return is high — and why we buy conservatively and price to comps.</p></div>
   </div>
