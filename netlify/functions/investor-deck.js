@@ -236,10 +236,10 @@ function deck(name) {
     <div class="foot">≈ $225,000 gross spread — under contract at $417/SF, the highest in the neighborhood.</div>
   </div>
   <div class="cols c2" style="margin-top:2rem">
-    <div class="card"><div class="eyebrow" style="color:var(--gold)">The financing · recorded</div>
-      <p style="margin-top:1rem;color:var(--ink)">Loan Ranger Capital funded a <strong>$1,143,250</strong> loan — including an <strong>$875,000</strong> construction escrow. Land closed Mar 20, 2025; the build draws from escrow as work completes.</p></div>
-    <div class="card"><div class="eyebrow" style="color:var(--gold)">The equity</div>
-      <p style="margin-top:1rem;color:var(--ink)">Cash to close <strong>$231,576</strong> — the equity position at acquisition. Origination $34,298 (3.0 pts) on a construction loan against a 6–8 month build.</p></div>
+    <div class="card"><div class="eyebrow" style="color:var(--gold)">The economics · recorded</div>
+      <p style="margin-top:1rem;color:var(--ink)">Land closed <strong>Mar 20, 2025</strong> at <strong>$470K</strong>; built to a luxury 4,375 SF single-story and now under contract at <strong>$1,825,000</strong> — a ≈ $225K gross spread on a 6–8 month build.</p></div>
+    <div class="card"><div class="eyebrow" style="color:var(--gold)">The proof</div>
+      <p style="margin-top:1rem;color:var(--ink)"><strong>$417/SF</strong> isn’t a projection — it’s a signed contract, the highest in 75229, and JoJo is the listing agent. It’s the anchor under every target price in this deck.</p></div>
   </div>
   <p class="foothint">Purchase figures from the recorded settlement statement (3/20/2025). Build cost owner-estimated; sale under contract.</p>
 </div></section>
@@ -249,16 +249,16 @@ function deck(name) {
     <span class="badge">Active Build</span>
     <div class="eyebrow">Acquired Jun 2026</div>
     <h2>3316 Townsend Drive</h2>
-    <p style="color:rgba(250,249,245,.75);margin-top:1rem;max-width:60ch">The next build — acquired and financed. A 5,500 SF transitional modern, priced off Whitehall’s proven $/SF.</p>
+    <p style="color:rgba(250,249,245,.75);margin-top:1rem;max-width:60ch">The next build — acquired. A 5,500 SF transitional modern, priced off Whitehall’s proven $/SF.</p>
     <div class="grid">
       <div><div class="n">$507K</div><div class="l">Acquisition · Jun 2026</div></div>
       <div><div class="n">$1.07M</div><div class="l">Build budget</div></div>
-      <div><div class="n">≈ $1.64M</div><div class="l">All-in incl. carry</div></div>
+      <div><div class="n">≈ $1.60M</div><div class="l">All-in incl. holding</div></div>
       <div><div class="n">$2.31M</div><div class="l">Target · $420/SF</div></div>
     </div>
-    <div class="foot">≈ $672,000 gross / ≈ $556,000 net at $420/SF — after carrying and sale costs.</div>
+    <div class="foot">≈ $709,000 gross / ≈ $593,000 net at $420/SF — after holding and sale costs.</div>
   </div>
-  <p class="foothint">Acquisition from the recorded settlement statement (6/24/2026): $500,000 purchase price, $507K all-in. Build from the project budget ($1,067,325, incl. 5% contingency). All-in adds ~6% carrying; target value at $420/SF × 5,500 SF, net of ~5% sale costs — with the listing side captured in-house.</p>
+  <p class="foothint">Acquisition from the recorded settlement statement (6/24/2026): $500,000 purchase price, $507K all-in. Build from the project budget ($1,067,325, incl. 5% contingency). Partner-funded — no loan; all-in adds only ~2.5% holding (taxes, insurance, utilities). Target value at $420/SF × 5,500 SF, net of ~5% sale costs — with the listing side captured in-house.</p>
 </div></section>
 
 <section><div class="wrap"><div class="eyebrow">Comparable Sales</div><h2>The value is on the comps.</h2>
@@ -333,41 +333,41 @@ function deck(name) {
 
 <section><div class="wrap"><div class="eyebrow">Investor Returns · Illustrative</div><h2>What you put in — and what comes back.</h2>
   <table class="table" style="max-width:640px"><tbody>
-    <tr><td>Your capital in (incl. reserve)</td><td class="n" style="text-align:right">≈ $190,000</td></tr>
-    <tr><td>Net profit · after carrying &amp; sale costs</td><td class="n" style="text-align:right">≈ $450,000</td></tr>
-    <tr><td>Your principal — returned first</td><td class="n" style="text-align:right">$190,000</td></tr>
-    <tr><td>Your profit share — 25% (1 of 4)</td><td class="n" style="text-align:right">≈ $113,000</td></tr>
-    <tr><td><strong>Total back to you</strong></td><td class="n" style="text-align:right"><strong>≈ $303,000</strong></td></tr>
+    <tr><td>You fund the project · all-in</td><td class="n" style="text-align:right">≈ $1,600,000</td></tr>
+    <tr><td>Net profit · after holding &amp; sale costs</td><td class="n" style="text-align:right">≈ $489,000</td></tr>
+    <tr><td>Your capital — returned first</td><td class="n" style="text-align:right">$1,600,000</td></tr>
+    <tr><td>Your profit share — 25% (1 of 4)</td><td class="n" style="text-align:right">≈ $122,000</td></tr>
+    <tr><td><strong>Total back to you</strong></td><td class="n" style="text-align:right"><strong>≈ $1,722,000</strong></td></tr>
   </tbody></table>
-  <p class="lead" style="margin-top:1.6rem">≈ <strong>$303,000 total back on ≈ $190,000 in</strong> — about a 1.6× return, ≈ 59% on capital, over a 6–8 month build. Modeled conservatively on Townsend at $400/SF — the proven market max, below our $420 target — net of carrying and sale costs. Capital carries a reserve cushion and is at risk — see Risk &amp; Mitigation.</p>
+  <p class="lead" style="margin-top:1.6rem">≈ <strong>$122,000 profit on ≈ $1.6M funded</strong> — about <strong>7.6%</strong> over a 6–8 month build (≈ 11% annualized), with every dollar of capital returned first. Modeled conservatively on Townsend at $400/SF — the proven market max; at the $420 target the same deal returns ≈ 9.3% (≈ 14% annualized). Partners fund directly — no lender, no leverage. Capital is at risk — see Risk &amp; Mitigation.</p>
 </div></section>
 
 <section class="sand" style="background:var(--sand)"><div class="wrap"><div class="eyebrow">Development Pro Forma · By Size &amp; Price</div>
   <h2>Every size, every price — it pays.</h2>
-  <p class="lead">One cost model, built from real numbers and underwritten conservatively: land at our Townsend basis of <strong>$507K</strong>, construction at <strong>$194/SF</strong> (the actual Townsend budget), <strong>carrying at ~6%</strong> of build (interest, taxes, insurance, utilities over the 6–8 month hold), and <strong>sale costs at 5%</strong>. <em>Net profit</em> is project-level after every cost; <em>Your 25%</em> is the investor’s profit share after principal is returned.</p>
+  <p class="lead">One cost model, built from real numbers and underwritten conservatively: land at our Townsend basis of <strong>$507K</strong>, construction at <strong>$194/SF</strong> (the actual Townsend budget), <strong>holding at ~2.5%</strong> of build (taxes, insurance, utilities — partners fund directly, so there’s no loan interest), and <strong>sale costs at 5%</strong>. <em>Net profit</em> is project-level after every cost; <em>Your 25%</em> is the partner’s profit share after capital is returned.</p>
 
   <div class="cols c2" style="margin-top:2.4rem">
     <div class="card">
       <h3>4,300 SF home</h3>
-      <div class="eyebrow" style="color:var(--gold);margin:.55rem 0 0">All-in ≈ $1.39M · land $507K + build $834K + carry $50K</div>
+      <div class="eyebrow" style="color:var(--gold);margin:.55rem 0 0">All-in ≈ $1.36M · land $507K + build $834K + holding $21K</div>
       <table class="table" style="margin-top:1.1rem">
         <thead><tr><th>Reality</th><th>$/SF</th><th>Sale</th><th>Net profit</th><th>Your 25%</th></tr></thead>
         <tbody>
-          <tr><td>Current market</td><td class="n">$378</td><td class="n">$1.63M</td><td class="n">$153K</td><td class="n">$38K</td></tr>
-          <tr><td>Market max</td><td class="n">$400</td><td class="n">$1.72M</td><td class="n">$243K</td><td class="n">$61K</td></tr>
-          <tr><td><strong>Aterra target</strong></td><td class="n"><strong>$420</strong></td><td class="n">$1.81M</td><td class="n"><strong>$324K</strong></td><td class="n"><strong>$81K</strong></td></tr>
+          <tr><td>Current market</td><td class="n">$378</td><td class="n">$1.63M</td><td class="n">$182K</td><td class="n">$46K</td></tr>
+          <tr><td>Market max</td><td class="n">$400</td><td class="n">$1.72M</td><td class="n">$272K</td><td class="n">$68K</td></tr>
+          <tr><td><strong>Aterra target</strong></td><td class="n"><strong>$420</strong></td><td class="n">$1.81M</td><td class="n"><strong>$354K</strong></td><td class="n"><strong>$88K</strong></td></tr>
         </tbody>
       </table>
     </div>
     <div class="card">
       <h3>5,200 SF home</h3>
-      <div class="eyebrow" style="color:var(--gold);margin:.55rem 0 0">All-in ≈ $1.58M · land $507K + build $1.01M + carry $61K</div>
+      <div class="eyebrow" style="color:var(--gold);margin:.55rem 0 0">All-in ≈ $1.54M · land $507K + build $1.01M + holding $25K</div>
       <table class="table" style="margin-top:1.1rem">
         <thead><tr><th>Reality</th><th>$/SF</th><th>Sale</th><th>Net profit</th><th>Your 25%</th></tr></thead>
         <tbody>
-          <tr><td>Current market</td><td class="n">$378</td><td class="n">$1.97M</td><td class="n">$291K</td><td class="n">$73K</td></tr>
-          <tr><td>Market max</td><td class="n">$400</td><td class="n">$2.08M</td><td class="n">$400K</td><td class="n">$100K</td></tr>
-          <tr><td><strong>Aterra target</strong></td><td class="n"><strong>$420</strong></td><td class="n">$2.18M</td><td class="n"><strong>$498K</strong></td><td class="n"><strong>$125K</strong></td></tr>
+          <tr><td>Current market</td><td class="n">$378</td><td class="n">$1.97M</td><td class="n">$326K</td><td class="n">$82K</td></tr>
+          <tr><td>Market max</td><td class="n">$400</td><td class="n">$2.08M</td><td class="n">$435K</td><td class="n">$109K</td></tr>
+          <tr><td><strong>Aterra target</strong></td><td class="n"><strong>$420</strong></td><td class="n">$2.18M</td><td class="n"><strong>$534K</strong></td><td class="n"><strong>$133K</strong></td></tr>
         </tbody>
       </table>
     </div>
@@ -379,10 +379,10 @@ function deck(name) {
     <p style="color:rgba(250,249,245,.78);margin-top:.9rem;max-width:66ch">We pressure-test every deal against a 30% hard-cost overrun — change orders, material spikes, delays, all of it. At our target price, both homes still clear a profit. Only a simultaneous 30% blow-out <em>and</em> a fall back to today’s average price would pressure the smaller home — which is exactly why we build larger and price to the target.</p>
     <div style="display:grid;grid-template-columns:auto repeat(3,1fr);gap:.7rem 1.1rem;margin-top:1.8rem;align-items:baseline">
       <div class="l">&nbsp;</div><div class="l">@ $378 · current</div><div class="l">@ $400 · max</div><div class="l">@ $420 · target</div>
-      <div class="l" style="color:var(--paper)">4,300 SF net</div><div class="n">−$112K</div><div class="n">−$23K</div><div class="n">+$59K</div>
-      <div class="l" style="color:var(--paper)">5,200 SF net</div><div class="n">−$30K</div><div class="n">+$79K</div><div class="n">+$178K</div>
+      <div class="l" style="color:var(--paper)">4,300 SF net</div><div class="n">−$74K</div><div class="n">+$15K</div><div class="n">+$97K</div>
+      <div class="l" style="color:var(--paper)">5,200 SF net</div><div class="n">+$16K</div><div class="n">+$125K</div><div class="n">+$224K</div>
     </div>
-    <div class="foot" style="font-size:1.05rem;margin-top:1.6rem">At target pricing, a full 30% cost overrun still nets +$59K to +$178K — the deal survives its own worst case.</div>
+    <div class="foot" style="font-size:1.05rem;margin-top:1.6rem">At target pricing, a full 30% cost overrun still nets +$97K to +$224K — the deal survives its own worst case.</div>
   </div>
 
   <div class="card" style="margin-top:1.6rem;border-left:3px solid var(--gold)">
@@ -390,17 +390,17 @@ function deck(name) {
     <p style="margin-top:.6rem;color:var(--ink)">The net figures above already deduct a full 5% for sale costs. Because Atterra lists every home in-house, the <strong>~2.5–3% listing-side commission — roughly $45K–$65K per home</strong> — is captured by the team rather than paid out. That’s margin the model doesn’t even count.</p>
   </div>
 
-  <p class="foothint">Base case includes carrying and sale costs. Land is a fixed cost, so the larger 5,200 SF home spreads it over more sellable feet — bigger home, fatter margin. $/SF anchors: current market $378 (blended new-construction comps), market max $400 (top closed comp — 10917 Beauty at $397/SF), Atterra target $420 (3239 Whitehall under contract at $417/SF; 3229 Jubilee coming soon, target $420/SF). Construction held flat at Townsend’s $194/SF; carrying ≈ 6% of build; stress test adds 30% to all hard costs.</p>
+  <p class="foothint">Base case includes holding and sale costs. Land is a fixed cost, so the larger 5,200 SF home spreads it over more sellable feet — bigger home, fatter margin. $/SF anchors: current market $378 (blended new-construction comps), market max $400 (top closed comp — 10917 Beauty at $397/SF), Atterra target $420 (3239 Whitehall under contract at $417/SF; 3229 Jubilee coming soon, target $420/SF). Construction held flat at Townsend’s $194/SF; holding ≈ 2.5% of build (no loan interest); stress test adds 30% to all hard costs.</p>
 </div></section>
 
 <section><div class="wrap"><div class="eyebrow">Use of Funds &amp; Timeline</div><h2>Where capital goes — and when it returns.</h2>
   <div class="cols c2">
     <div>
       <table class="table"><tbody>
-        <tr><td>Cash to close · down payment + fees</td><td class="n" style="text-align:right">≈ $165K</td></tr>
-        <tr><td>Working capital &amp; carry reserve</td><td style="text-align:right">buffer</td></tr>
-        <tr><td>Contingency</td><td style="text-align:right">5%+</td></tr>
-        <tr><td>Soft costs · survey, insurance, design</td><td style="text-align:right">as needed</td></tr>
+        <tr><td>Land acquisition</td><td class="n" style="text-align:right">≈ $507K</td></tr>
+        <tr><td>Construction · $194/SF</td><td class="n" style="text-align:right">≈ $0.83–1.07M</td></tr>
+        <tr><td>Holding · taxes, insurance, utilities</td><td class="n" style="text-align:right">≈ $25K</td></tr>
+        <tr><td>Contingency · in budget</td><td style="text-align:right">5%</td></tr>
       </tbody></table>
     </div>
     <div class="steps">
@@ -410,15 +410,15 @@ function deck(name) {
       <div class="step"><span class="k">04</span><span>Return capital</span><span class="w">On close</span></div>
     </div>
   </div>
-  <p class="foothint">A 6–8 month build against an 18-month loan term leaves a deliberate cushion.</p>
+  <p class="foothint">Partners fund the project directly — no lender ahead of you. Capital is returned in full at close, before any profit split.</p>
 </div></section>
 
 <section class="sand" style="background:var(--sand)"><div class="wrap"><div class="eyebrow">Risk &amp; Mitigation</div><h2>We name the risks — and manage them.</h2>
   <div class="cols c2">
     <div class="card"><h3>Market softening</h3><p>Conservative, data-backed values from Area Intel; we buy on a basis the comps support. Our conservative case prices at today’s market, not the $420 target.</p></div>
     <div class="card"><h3>Cost overruns</h3><p>Trade pricing locked at this price point; 5% contingency in every budget; daily PM cost control in-app with a live ledger. We underwrite each deal against a 30% hard-cost overrun — and it still profits at target pricing.</p></div>
-    <div class="card"><h3>Timeline slippage</h3><p>6–8 month build against an 18-month loan — a wide buffer, with weekly oversight.</p></div>
-    <div class="card"><h3>Leverage / first-loss</h3><p>Your capital sits in the equity position behind the construction loan. That’s why the return is high — and why we buy conservatively and price to comps.</p></div>
+    <div class="card"><h3>Timeline slippage</h3><p>A disciplined 6–8 month build with a deliberate schedule buffer and weekly oversight; carrying is light because partners fund directly — there’s no loan clock running.</p></div>
+    <div class="card"><h3>Your capital, first out</h3><p>No lender, no leverage — partners fund directly and are repaid in full before any profit is split. Each property is held in its own trust. You’re first in line, not behind a bank.</p></div>
   </div>
 </div></section>
 
