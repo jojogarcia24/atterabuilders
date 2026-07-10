@@ -68,6 +68,7 @@ const STYLE = `
   .card{background:var(--paper2);border:1px solid var(--hair);padding:1.8rem}
   .card .no{font-family:var(--fd);color:var(--gold);font-size:1.05rem}
   .card h3{margin:.6rem 0 .5rem}.card p{font-size:.96rem}
+  .headshot{width:100%;aspect-ratio:1/1;object-fit:cover;object-position:50% 22%;display:block;margin:-1.8rem -1.8rem 1.2rem;width:calc(100% + 3.6rem);max-width:none;filter:grayscale(.12)}
   .stat .n{font-family:var(--fd);font-weight:500;font-size:clamp(2rem,4vw,2.8rem);line-height:1}
   .stat .l{font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-top:.5rem}
   .deal{background:var(--ink);color:var(--paper);padding:clamp(2rem,4vw,3rem)}
@@ -210,9 +211,32 @@ function deck(name) {
 
 <section><div class="wrap"><div class="eyebrow">The Team</div><h2>Operators, not spectators.</h2>
   <div class="cols c3">
-    <div class="card"><h3>Pamela Tellez</h3><div class="eyebrow" style="color:var(--gold);margin:.4rem 0">Project Manager</div><p>Proven luxury-build manager — runs the GC day-to-day.</p></div>
-    <div class="card"><h3>Cliff Graham</h3><div class="eyebrow" style="color:var(--gold);margin:.4rem 0">Designer</div><p>Leads design and selections — the finishes buyers pay up for.</p></div>
-    <div class="card"><h3>JoJo Garcia</h3><div class="eyebrow" style="color:var(--gold);margin:.4rem 0">Sales Director</div><p>On the ground every weekend — drives positioning and the sale.</p></div>
+    <div class="card"><img class="headshot" src="/assets/team-pamela.jpg" alt="Pamela Tellez"><h3>Pamela Tellez</h3><div class="eyebrow" style="color:var(--gold);margin:.4rem 0">Project Manager</div><p>Proven luxury-build manager — runs the GC day-to-day.</p></div>
+    <div class="card"><img class="headshot" src="/assets/team-cliff.jpg" alt="Cliff Graham"><h3>Cliff Graham</h3><div class="eyebrow" style="color:var(--gold);margin:.4rem 0">Designer</div><p>Leads design and selections — the finishes buyers pay up for.</p></div>
+    <div class="card"><img class="headshot" src="/assets/team-jojo.jpg" alt="JoJo Garcia"><h3>JoJo Garcia</h3><div class="eyebrow" style="color:var(--gold);margin:.4rem 0">Sales Director</div><p>On the ground every weekend — drives positioning and the sale.</p></div>
+  </div>
+</div></section>
+
+<section class="sand" style="background:var(--sand)"><div class="wrap"><div class="eyebrow">The System</div><h2>One platform runs the build.</h2>
+  <p class="lead">Every build, team member, task, document, cost and order — in one place. A command center we operate, not a spreadsheet we chase.</p>
+  <div class="cols c2">
+    <div class="card"><div class="no">01</div><h3>AI intake</h3><p>AI reads receipts and documents, auto-sorts them, and syncs to Drive — no manual filing.</p></div>
+    <div class="card"><div class="no">02</div><h3>69-step SOP</h3><p>A 69-step construction SOP routes the next task to the right person, automatically.</p></div>
+    <div class="card"><div class="no">03</div><h3>Live ledger</h3><p>Live budgets, change orders, and a master ledger across every project — every dollar tracked.</p></div>
+    <div class="card"><div class="no">04</div><h3>Voice + text assistant</h3><p>A voice and text assistant answers questions and updates the build hands-free, from the field.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap"><div class="eyebrow">Proprietary Intelligence</div><h2>We price by data, not by hope.</h2>
+  <p class="lead">Our Area Intel tracks the market by the foot, so every buy and every list price is set on fact.</p>
+  <div class="cols c3">
+    <div class="card stat"><div class="n">298</div><div class="l">Homes tracked, live · four areas</div></div>
+    <div class="card stat"><div class="n">By street</div><div class="l">What every block commands per foot</div></div>
+    <div class="card stat"><div class="n">By school</div><div class="l">The feeder premiums buyers pay for</div></div>
+  </div>
+  <div class="cols c2" style="margin-top:1.6rem">
+    <div class="card"><h3>By builder</h3><p>List-vs-sold gap, price-cut rate, and days on market for every builder in the pocket — we know who’s discounting and who’s holding.</p></div>
+    <div class="card"><h3>By the foot</h3><p>Every finished sale tracked per square foot, by street and by size — the exact basis behind our $/SF targets.</p></div>
   </div>
 </div></section>
 
