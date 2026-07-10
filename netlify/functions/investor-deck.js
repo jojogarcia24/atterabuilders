@@ -276,20 +276,20 @@ function deck(name) {
     <span class="badge">Active Build</span>
     <div class="eyebrow">Acquired Jun 2026</div>
     <h2>3316 Townsend Drive</h2>
-    <p style="color:rgba(250,249,245,.75);margin-top:1rem;max-width:60ch">The next build — acquired. A 5,500 SF transitional modern, priced off Whitehall’s proven $/SF.</p>
+    <p style="color:rgba(250,249,245,.75);margin-top:1rem;max-width:62ch">Our live build — a large 5,500 SF transitional modern. At this size the market pays by the ceiling, not by the foot, so we target the pocket’s absolute price cap.</p>
     <div class="grid">
       <div><div class="n">$507K</div><div class="l">Acquisition · Jun 2026</div></div>
       <div><div class="n">$1.07M</div><div class="l">Build budget</div></div>
       <div><div class="n">≈ $1.60M</div><div class="l">All-in incl. holding</div></div>
-      <div><div class="n">$2.31M</div><div class="l">Target · $420/SF</div></div>
+      <div><div class="n">$1.995M</div><div class="l">Target · $363/SF</div></div>
     </div>
-    <div class="foot">≈ $709,000 gross / ≈ $593,000 net at $420/SF — after holding and sale costs.</div>
+    <div class="foot">≈ $394,000 gross / ≈ $294,000 net at $363/SF — a real deal, and the reason our next builds target ~4,400 SF.</div>
   </div>
-  <p class="foothint">Acquisition from the recorded settlement statement (6/24/2026): $500,000 purchase price, $507K all-in. Build from the project budget ($1,067,325, incl. 5% contingency). Partner-funded — no loan; all-in adds only ~2.5% holding (taxes, insurance, utilities). Target value at $420/SF × 5,500 SF, net of ~5% sale costs — with the listing side captured in-house.</p>
+  <p class="foothint">Acquisition from the recorded settlement statement (6/24/2026): $500,000 purchase price, $507K all-in. Build from the project budget ($1,067,325, incl. 5% contingency). Partner-funded — no loan; all-in adds ~2.5% holding. A 5,500 SF home clears the market’s ~$2M ceiling but at a lower $/SF — which is exactly why the sweet spot is ~4,400 SF at Whitehall’s proven $417/SF.</p>
 </div></section>
 
 <section><div class="wrap"><div class="eyebrow">Comparable Sales</div><h2>The value is on the comps.</h2>
-  <p class="lead">Recent finished sales in 75229 — five-bedroom new construction, from the July 2026 market analysis. Whitehall at $417/SF sits at the top; Townsend’s $420/SF target is the size premium.</p>
+  <p class="lead">Recent finished sales in 75229 — five-bedroom new construction, from the July 2026 market analysis. Whitehall at $417/SF sets the sweet-spot price; larger homes trade lower per foot but still clear the pocket’s ~$2M ceiling.</p>
   <table class="table"><thead><tr><th>Address</th><th>Price</th><th>$/SF</th><th>SF</th><th>Status</th></tr></thead><tbody>
     <tr><td>3629 Vancouver Dr</td><td class="n">$1,785,000</td><td class="n">$387</td><td>4,609</td><td>Closed</td></tr>
     <tr><td>3207 Latham Dr</td><td class="n">$1,800,000</td><td class="n">$369</td><td>4,876</td><td>Closed</td></tr>
@@ -355,7 +355,7 @@ function deck(name) {
   <div class="maplegend">
     <span><b>1</b> 3239 Whitehall · $417/SF · under contract</span>
     <span><b>2</b> 3316 Townsend · 5,500 SF · active build</span>
-    <span><b>3</b> 3229 Jubilee · $420/SF · coming soon</span>
+    <span><b>3</b> 3229 Jubilee · $420–425/SF target · coming soon</span>
   </div>
   </div>
   <div class="cols c3" style="margin-top:2rem">
@@ -379,64 +379,69 @@ function deck(name) {
 
 <section><div class="wrap"><div class="eyebrow">Investor Returns · Illustrative</div><h2>What you put in — and what comes back.</h2>
   <table class="table" style="max-width:640px"><tbody>
-    <tr><td>You fund the project · all-in</td><td class="n" style="text-align:right">≈ $1,600,000</td></tr>
-    <tr><td>Net profit · after holding &amp; sale costs</td><td class="n" style="text-align:right">≈ $489,000</td></tr>
-    <tr><td>Your capital — returned first</td><td class="n" style="text-align:right">$1,600,000</td></tr>
-    <tr><td>Your profit share — 25% (1 of 4)</td><td class="n" style="text-align:right">≈ $122,000</td></tr>
-    <tr><td><strong>Total back to you</strong></td><td class="n" style="text-align:right"><strong>≈ $1,722,000</strong></td></tr>
+    <tr><td>You fund the project · all-in</td><td class="n" style="text-align:right">≈ $1,382,000</td></tr>
+    <tr><td>Net profit · after holding &amp; sale costs</td><td class="n" style="text-align:right">≈ $361,000</td></tr>
+    <tr><td>Your capital — returned first</td><td class="n" style="text-align:right">$1,382,000</td></tr>
+    <tr><td>Your profit share — 25% (1 of 4)</td><td class="n" style="text-align:right">≈ $90,000</td></tr>
+    <tr><td><strong>Total back to you</strong></td><td class="n" style="text-align:right"><strong>≈ $1,472,000</strong></td></tr>
   </tbody></table>
-  <p class="lead" style="margin-top:1.6rem">≈ <strong>$122,000 profit on ≈ $1.6M funded</strong> — about <strong>7.6%</strong> over a 6–8 month build (≈ 11% annualized), with every dollar of capital returned first. Modeled conservatively on Townsend at $400/SF — the proven market max; at the $420 target the same deal returns ≈ 9.3% (≈ 14% annualized). Partners fund directly — no lender, no leverage. Capital is at risk — see Risk &amp; Mitigation.</p>
+  <p class="lead" style="margin-top:1.6rem">≈ <strong>$90,000 profit on ≈ $1.38M funded</strong> — about <strong>6.5%</strong> over a 6–8 month build (≈ 10% annualized), with every dollar of capital returned first. Modeled on our sweet spot: a <strong>4,400 SF home at $417/SF</strong> — the price 3239 Whitehall just proved (under contract), with 3229 Jubilee coming soon targeting $420–425. Partners fund directly — no lender, no leverage. Capital is at risk — see Risk &amp; Mitigation.</p>
 </div></section>
 
-<section class="sand" style="background:var(--sand)"><div class="wrap"><div class="eyebrow">Development Pro Forma · By Size &amp; Price</div>
-  <h2>Every size, every price — it pays.</h2>
-  <p class="lead">One cost model, built from real numbers and underwritten conservatively: land at our Townsend basis of <strong>$507K</strong>, construction at <strong>$194/SF</strong> (the actual Townsend budget), <strong>holding at ~2.5%</strong> of build (taxes, insurance, utilities — partners fund directly, so there’s no loan interest), and <strong>sale costs at 5%</strong>. <em>Net profit</em> is project-level after every cost; <em>Your 25%</em> is the partner’s profit share after capital is returned.</p>
+<section class="sand" style="background:var(--sand)"><div class="wrap"><div class="eyebrow">Development Pro Forma · By Size</div>
+  <h2>The sweet spot is ~4,400 square feet.</h2>
+  <p class="lead">One cost model from real numbers: land <strong>$507K</strong> (our Townsend basis), construction <strong>$194/SF</strong> (the actual budget), <strong>~2.5% holding</strong>, <strong>5% sale costs</strong> — partners fund directly, so no loan interest. The nuance: bigger homes sell at a <em>lower</em> price per foot. Past ~4,500 SF the market pays by the ceiling, not by the foot — so the margin sweet spot is the ~4,400 SF home at the proven $417/SF.</p>
 
-  <div class="cols c2" style="margin-top:2.4rem">
-    <div class="card">
-      <h3>4,300 SF home</h3>
-      <div class="eyebrow" style="color:var(--gold);margin:.55rem 0 0">All-in ≈ $1.36M · land $507K + build $834K + holding $21K</div>
-      <table class="table" style="margin-top:1.1rem">
-        <thead><tr><th>Reality</th><th>$/SF</th><th>Sale</th><th>Net profit</th><th>Your 25%</th></tr></thead>
-        <tbody>
-          <tr><td>Current market</td><td class="n">$378</td><td class="n">$1.63M</td><td class="n">$182K</td><td class="n">$46K</td></tr>
-          <tr><td>Market max</td><td class="n">$400</td><td class="n">$1.72M</td><td class="n">$272K</td><td class="n">$68K</td></tr>
-          <tr><td><strong>Aterra target</strong></td><td class="n"><strong>$420</strong></td><td class="n">$1.81M</td><td class="n"><strong>$354K</strong></td><td class="n"><strong>$88K</strong></td></tr>
-        </tbody>
-      </table>
+  <div class="scen">
+    <div class="box hi">
+      <div class="tag" style="color:var(--gold)">Sweet spot · proven price</div>
+      <div class="psf">$417/SF</div>
+      <div class="sf" style="color:rgba(250,249,245,.7)">4,400 SF · like Whitehall</div>
+      <div class="row" style="border-color:rgba(250,249,245,.2)"><span style="color:rgba(250,249,245,.7)">Sale</span><span>≈ $1.83M</span></div>
+      <div class="row" style="border-color:rgba(250,249,245,.2)"><span style="color:rgba(250,249,245,.7)">Net profit</span><span>≈ $361K</span></div>
+      <div class="row" style="border-color:rgba(250,249,245,.2)"><span style="color:rgba(250,249,245,.7)">Your 25% share</span><span>≈ $90K</span></div>
+      <div class="ret">≈ 6.5%</div>
+      <div class="sf" style="color:rgba(250,249,245,.7)">on ≈ $1.38M funded · ~8 mo (≈ 10% annualized)</div>
     </div>
-    <div class="card">
-      <h3>5,200 SF home</h3>
-      <div class="eyebrow" style="color:var(--gold);margin:.55rem 0 0">All-in ≈ $1.54M · land $507K + build $1.01M + holding $25K</div>
-      <table class="table" style="margin-top:1.1rem">
-        <thead><tr><th>Reality</th><th>$/SF</th><th>Sale</th><th>Net profit</th><th>Your 25%</th></tr></thead>
-        <tbody>
-          <tr><td>Current market</td><td class="n">$378</td><td class="n">$1.97M</td><td class="n">$326K</td><td class="n">$82K</td></tr>
-          <tr><td>Market max</td><td class="n">$400</td><td class="n">$2.08M</td><td class="n">$435K</td><td class="n">$109K</td></tr>
-          <tr><td><strong>Aterra target</strong></td><td class="n"><strong>$420</strong></td><td class="n">$2.18M</td><td class="n"><strong>$534K</strong></td><td class="n"><strong>$133K</strong></td></tr>
-        </tbody>
-      </table>
+    <div class="box">
+      <div class="tag">Larger home</div>
+      <div class="psf">$380/SF</div>
+      <div class="sf">5,200 SF</div>
+      <div class="row"><span>Sale</span><span>≈ $1.98M</span></div>
+      <div class="row"><span>Net profit</span><span>≈ $336K</span></div>
+      <div class="row"><span>Your 25% share</span><span>≈ $84K</span></div>
+      <div class="ret">≈ 5.5%</div>
+      <div class="sf">on ≈ $1.54M funded · ~8 mo</div>
+    </div>
+    <div class="box">
+      <div class="tag">Live deal · Townsend</div>
+      <div class="psf">$363/SF</div>
+      <div class="sf">5,500 SF</div>
+      <div class="row"><span>Sale</span><span>≈ $1.995M</span></div>
+      <div class="row"><span>Net profit</span><span>≈ $294K</span></div>
+      <div class="row"><span>Your 25% share</span><span>≈ $74K</span></div>
+      <div class="ret">≈ 4.6%</div>
+      <div class="sf">on ≈ $1.60M funded · ~8 mo</div>
     </div>
   </div>
 
   <div class="deal" style="margin-top:1.8rem">
     <div class="eyebrow">Stress Test · build runs 30% over</div>
     <h2 style="font-size:clamp(1.4rem,3vw,2rem)">And if everything costs 30% more?</h2>
-    <p style="color:rgba(250,249,245,.78);margin-top:.9rem;max-width:66ch">We pressure-test every deal against a 30% hard-cost overrun — change orders, material spikes, delays, all of it. At our target price, both homes still clear a profit. Only a simultaneous 30% blow-out <em>and</em> a fall back to today’s average price would pressure the smaller home — which is exactly why we build larger and price to the target.</p>
-    <div style="display:grid;grid-template-columns:auto repeat(3,1fr);gap:.7rem 1.1rem;margin-top:1.8rem;align-items:baseline">
-      <div class="l">&nbsp;</div><div class="l">@ $378 · current</div><div class="l">@ $400 · max</div><div class="l">@ $420 · target</div>
-      <div class="l" style="color:var(--paper)">4,300 SF net</div><div class="n">−$74K</div><div class="n">+$15K</div><div class="n">+$97K</div>
-      <div class="l" style="color:var(--paper)">5,200 SF net</div><div class="n">+$16K</div><div class="n">+$125K</div><div class="n">+$224K</div>
+    <p style="color:rgba(250,249,245,.78);margin-top:.9rem;max-width:66ch">We pressure-test every deal against a 30% hard-cost overrun — change orders, material spikes, delays. The sweet-spot home absorbs it and still clears a profit; the bigger the home, the thinner the cushion — another reason we build to ~4,400 SF.</p>
+    <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:.7rem 1.1rem;margin-top:1.8rem;align-items:baseline">
+      <div class="l">Net at +30% build</div><div class="l">4,400 SF</div><div class="l">5,200 SF</div><div class="l">5,500 SF</div>
+      <div class="l" style="color:var(--paper)">Net profit</div><div class="n">+$99K</div><div class="n">+$26K</div><div class="n">−$34K</div>
     </div>
-    <div class="foot" style="font-size:1.05rem;margin-top:1.6rem">At target pricing, a full 30% cost overrun still nets +$97K to +$224K — the deal survives its own worst case.</div>
+    <div class="foot" style="font-size:1.05rem;margin-top:1.6rem">Even with costs 30% over, the 4,400 SF sweet spot still nets ≈ $99K — it survives its own worst case.</div>
   </div>
 
   <div class="card" style="margin-top:1.6rem;border-left:3px solid var(--gold)">
     <div class="eyebrow" style="color:var(--gold)">Built-in upside · in-house listing</div>
-    <p style="margin-top:.6rem;color:var(--ink)">The net figures above already deduct a full 5% for sale costs. Because Atterra lists every home in-house, the <strong>~2.5–3% listing-side commission — roughly $45K–$65K per home</strong> — is captured by the team rather than paid out. That’s margin the model doesn’t even count.</p>
+    <p style="margin-top:.6rem;color:var(--ink)">The net figures above already deduct a full 5% for sale costs. Because Atterra lists every home in-house, the <strong>~2.5–3% listing-side commission — roughly $45K–$55K per home</strong> — is captured by the team rather than paid out. That’s margin the model doesn’t even count.</p>
   </div>
 
-  <p class="foothint">Base case includes holding and sale costs. Land is a fixed cost, so the larger 5,200 SF home spreads it over more sellable feet — bigger home, fatter margin. $/SF anchors: current market $378 (blended new-construction comps), market max $400 (top closed comp — 10917 Beauty at $397/SF), Atterra target $420 (3239 Whitehall under contract at $417/SF; 3229 Jubilee coming soon, target $420/SF). Construction held flat at Townsend’s $194/SF; holding ≈ 2.5% of build (no loan interest); stress test adds 30% to all hard costs.</p>
+  <p class="foothint">$/SF anchors: 4,400 SF at $417 — proven by 3239 Whitehall (4,375 SF, under contract); 5,200 SF at ~$380 and Townsend’s 5,500 SF at $363 reflect the market’s lower price-per-foot on larger homes. 3229 Jubilee (coming soon, ~4,200 SF) targets $420–425/SF — supportive, though not yet a closed comp. Land $507K, construction $194/SF, holding ≈ 2.5% of build (no loan interest), sale costs 5%; stress test adds 30% to all hard costs.</p>
 </div></section>
 
 <section><div class="wrap"><div class="eyebrow">Use of Funds &amp; Timeline</div><h2>Where capital goes — and when it returns.</h2>
@@ -461,7 +466,7 @@ function deck(name) {
 
 <section class="sand" style="background:var(--sand)"><div class="wrap"><div class="eyebrow">Risk &amp; Mitigation</div><h2>We name the risks — and manage them.</h2>
   <div class="cols c2">
-    <div class="card"><h3>Market softening</h3><p>Conservative, data-backed values from Area Intel; we buy on a basis the comps support. Our conservative case prices at today’s market, not the $420 target.</p></div>
+    <div class="card"><h3>Market softening</h3><p>Conservative, data-backed values from Area Intel; we buy on a basis the comps support. Our sweet-spot price is the $417/SF Whitehall just proved under contract — not a projection.</p></div>
     <div class="card"><h3>Cost overruns</h3><p>Trade pricing locked at this price point; 5% contingency in every budget; daily PM cost control in-app with a live ledger. We underwrite each deal against a 30% hard-cost overrun — and it still profits at target pricing.</p></div>
     <div class="card"><h3>Timeline slippage</h3><p>A disciplined 6–8 month build with a deliberate schedule buffer and weekly oversight; carrying is light because partners fund directly — there’s no loan clock running.</p></div>
     <div class="card"><h3>Your capital, first out</h3><p>No lender, no leverage — partners fund directly and are repaid in full before any profit is split. Each property is held in its own trust. You’re first in line, not behind a bank.</p></div>
