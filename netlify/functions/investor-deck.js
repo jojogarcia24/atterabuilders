@@ -181,12 +181,19 @@ function deck(name) {
 
 <section class="sand" style="background:var(--sand)"><div class="wrap"><div class="eyebrow">The Opportunity</div>
   <h2>A market we measure.</h2>
-  <p class="lead">North Dallas luxury new construction, priced by the foot. We track ~298 homes live across our four core areas — the spread between land basis and finished value is the opportunity.</p>
-  <div class="cols c3">
+  <p class="lead">North Dallas luxury new construction, priced by the foot — median list $/SF across the four core areas we track. The spread between land basis and finished value is the opportunity.</p>
+  <div class="cols c4">
+    <div class="card stat"><div class="n">$646</div><div class="l">Preston Hollow · /SF</div></div>
+    <div class="card stat"><div class="n">$600</div><div class="l">Bluff View · /SF</div></div>
+    <div class="card stat"><div class="n">$545</div><div class="l">Melshire Estates · /SF</div></div>
+    <div class="card stat"><div class="n">$496</div><div class="l">Midway Hollow · /SF</div></div>
+  </div>
+  <div class="cols c3" style="margin-top:1.5rem">
     <div class="card stat"><div class="n">298</div><div class="l">Homes tracked, live</div></div>
-    <div class="card stat"><div class="n">$2.3M+</div><div class="l">Representative finished value</div></div>
+    <div class="card stat"><div class="n">$2.35M</div><div class="l">Representative finished value</div></div>
     <div class="card stat"><div class="n">$417/SF</div><div class="l">Our proven sale price (Whitehall)</div></div>
   </div>
+  <p class="foothint">Proprietary market data — Atterra Area Intel.</p>
 </div></section>
 
 <section><div class="wrap"><div class="eyebrow">The Model</div><h2>Acquire. Build. Sell.</h2>
@@ -269,6 +276,30 @@ function deck(name) {
       <p style="margin-top:1rem;color:var(--ink)"><strong>$417/SF</strong> isn’t a projection — it’s a signed contract, the highest in 75229, and JoJo is the listing agent. It’s the anchor under every target price in this deck.</p></div>
   </div>
   <p class="foothint">Purchase figures from the recorded settlement statement (3/20/2025). Build cost owner-estimated; sale under contract.</p>
+</div></section>
+
+<section class="sand" style="background:var(--sand)"><div class="wrap"><div class="eyebrow">The Deal, In Plain Terms</div>
+  <h2>How the money actually works.</h2>
+  <p class="lead">No loans, no leverage. A partner funds the project; we build and sell in-house; the partner is repaid first, then shares the profit. Here it is start to finish, on a sweet-spot 4,400 SF home.</p>
+  <div class="steps">
+    <div class="step"><span class="k">01</span><span>Partner funds the project — land, build &amp; holding</span><span class="w">≈ $1.38M in</span></div>
+    <div class="step"><span class="k">02</span><span>Atterra builds and sells in-house</span><span class="w">6–8 months</span></div>
+    <div class="step"><span class="k">03</span><span>Home sells at the proven $417/SF</span><span class="w">≈ $1.83M</span></div>
+    <div class="step"><span class="k">04</span><span>Partner’s capital returned — first, in full</span><span class="w">$1.38M back</span></div>
+    <div class="step"><span class="k">05</span><span>Profit split four ways — partner’s 25% share</span><span class="w">≈ $90K</span></div>
+  </div>
+  <p class="foothint">The partner walks with ≈ $1.47M — their $1.38M back plus ≈ $90K profit. Every dollar tracked live in our build system; the three principals and the partner share the profit equally.</p>
+</div></section>
+
+<section><div class="wrap"><div class="eyebrow">A Representative Residence</div>
+  <h2>See it for yourself.</h2>
+  <p class="lead">A five-suite, single-story modern in North Dallas — 3239 Whitehall, under contract at $417/SF, the highest in 75229.</p>
+  <img src="/assets/residence-whitehall.jpg" alt="3239 Whitehall Drive, North Dallas" style="width:100%;display:block;margin-top:1.6rem;border:1px solid var(--hair)">
+  <div class="cols c3" style="margin-top:1.8rem">
+    <div class="card stat"><div class="n" style="font-size:clamp(1.2rem,2.4vw,1.5rem)">3239 Whitehall Dr</div><div class="l">Address · 75229</div></div>
+    <div class="card stat"><div class="n" style="font-size:clamp(1.2rem,2.4vw,1.5rem)">5 · 5.5 · 4,375</div><div class="l">Beds · Baths · SF</div></div>
+    <div class="card stat"><div class="n" style="font-size:clamp(1.2rem,2.4vw,1.5rem)">$1.825M · $417/SF</div><div class="l">Under contract</div></div>
+  </div>
 </div></section>
 
 <section class="sand" style="background:var(--sand)"><div class="wrap">
