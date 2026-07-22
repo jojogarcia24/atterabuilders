@@ -21,7 +21,12 @@ const page = (body) => ({
 });
 
 exports.handler = async (event) => {
-  const key = ((event.queryStringParameters && event.queryStringParameters.key) || '').trim();
+  // Access tokens are 32 hex characters. Pull the token out of the raw value so a
+  // link that arrives with stray wrapping (HTML like </a>, punctuation, or spaces
+  // from being pasted out of an email) still resolves instead of 404-ing.
+  const raw = ((event.queryStringParameters && event.queryStringParameters.key) || '').trim().toLowerCase();
+  const hexMatch = raw.match(/[0-9a-f]{32}/);
+  const key = hexMatch ? hexMatch[0] : raw;
   if (!SUPABASE_URL || !SR) return page(gate('Not connected', 'The investor room isn’t configured yet.'));
   if (!key) return page(gate('Private link required', 'This page is available by invitation only. Please use the access link Atterra sent you.'));
 
