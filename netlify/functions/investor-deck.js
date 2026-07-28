@@ -152,6 +152,7 @@ const STYLE = `
 function gate(title, sub) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow"><title>Atterra Builders — Private</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/icon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="/assets/icon-192.png"><link rel="apple-touch-icon" href="/assets/icon-180.png">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:wght@500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
   <style>${STYLE} body{display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center}</style></head>
   <body><div class="wrap"><div class="eyebrow">Atterra Builders · Confidential</div>
@@ -165,6 +166,7 @@ function deck(name) {
   const hello = name ? `Prepared for ${esc(name)} · ` : '';
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><title>Atterra Builders — Private Investment Opportunity</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/icon-32.png"><link rel="icon" type="image/png" sizes="192x192" href="/assets/icon-192.png"><link rel="apple-touch-icon" href="/assets/icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,500;1,400&family=Cormorant+Garamond:ital@1&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>${STYLE}</style></head><body>
