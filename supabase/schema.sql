@@ -34,6 +34,10 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- handle_new_user is only a trigger function; it must not be a public RPC.
+-- Revoking EXECUTE does not affect the trigger (triggers run regardless).
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+
 create or replace function public.is_admin() returns boolean
 language sql stable security definer set search_path = public as $$
   select exists(select 1 from public.profiles where id = auth.uid() and role = 'admin');
@@ -164,6 +168,8 @@ alter table public.page_engagement   enable row level security;
 alter table public.engagement_alerts enable row level security;
 alter table public.push_subscriptions enable row level security;
 alter table public.saved_listings    enable row level security;
+alter table public.agents            enable row level security;
+alter table public.agent_clients     enable row level security;
 
 -- profiles: a user reads/updates their own; admins read all
 drop policy if exists prof_self_read   on public.profiles;
@@ -214,6 +220,22 @@ create policy sl_insert_own on public.saved_listings for insert with check ( aut
 create policy sl_update_own on public.saved_listings for update using ( auth.uid() = user_id ) with check ( auth.uid() = user_id );
 create policy sl_delete_own on public.saved_listings for delete using ( auth.uid() = user_id );
 create policy sl_admin_read  on public.saved_listings for select using ( is_admin() );
+
+-- agents: admins manage all; an agent may read their own row.
+drop policy if exists agents_admin_all on public.agents;
+drop policy if exists agents_self_read on public.agents;
+create policy agents_admin_all on public.agents
+  for all using ( is_admin() ) with check ( is_admin() );
+create policy agents_self_read on public.agents
+  for select to authenticated using ( user_id = auth.uid() );
+
+-- agent_clients: admins manage all; an agent may read their own assignments.
+drop policy if exists agent_clients_admin_all on public.agent_clients;
+drop policy if exists agent_clients_self_read on public.agent_clients;
+create policy agent_clients_admin_all on public.agent_clients
+  for all using ( is_admin() ) with check ( is_admin() );
+create policy agent_clients_self_read on public.agent_clients
+  for select to authenticated using ( agent_user_id = auth.uid() );
 
 -- ================================================================
 -- 7. HEAT-SCORE RPC
@@ -283,7 +305,9 @@ as $function$
   order by score desc, e.last_seen desc nulls last;
 $function$;
 
-grant execute on function public.get_lead_scores() to authenticated;
+-- admin-gated RPC: keep it off the anon role (still gates on is_admin() internally).
+revoke execute on function public.get_lead_scores() from public, anon;
+grant  execute on function public.get_lead_scores() to authenticated;
 
 -- list admins (with email) for the admin Team tab — admin-only
 create or replace function public.list_admins()
@@ -296,7 +320,9 @@ as $$
   where p.role = 'admin' and public.is_admin()
   order by p.created_at asc;
 $$;
-grant execute on function public.list_admins() to authenticated;
+-- admin-gated RPC: keep it off the anon role (still gates on is_admin() internally).
+revoke execute on function public.list_admins() from public, anon;
+grant  execute on function public.list_admins() to authenticated;
 
 -- ================================================================
 -- 8. MAKE YOURSELF ADMIN  (run once, after you sign up in the app)
