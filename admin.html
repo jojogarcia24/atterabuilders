@@ -128,6 +128,7 @@
       <button class="tab" data-tab="heat">Activity &amp; Heat <span class="count" id="c-heat">0</span></button>
       <button class="tab" data-tab="investors">Investors <span class="count" id="c-inv">0</span></button>
       <button class="tab" data-tab="team">Team <span class="count" id="c-team">0</span></button>
+      <button class="tab" data-tab="loans">Loan Packages <span class="count" id="c-loans">0</span></button>
     </div>
 
     <!-- INQUIRIES -->
@@ -181,10 +182,76 @@
       </div>
       <div class="card tablescroll"><div id="team-box"></div></div>
     </section>
+
+    <!-- LOAN PACKAGES -->
+    <section class="panel" data-panel="loans">
+      <style>
+        [data-panel="loans"] .lp-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem .9rem}
+        [data-panel="loans"] .lp-f{display:flex;flex-direction:column;gap:.2rem;font-size:.82rem}
+        [data-panel="loans"] .lp-f span{color:var(--muted)}
+        [data-panel="loans"] .lp-f input,[data-panel="loans"] .lp-f select{padding:.45em .5em;border:1px solid var(--line,#dcdcd6);border-radius:6px;font:inherit;background:#fff}
+        [data-panel="loans"] .lp-m{display:flex;justify-content:space-between;gap:1rem;padding:.28em 0;border-bottom:1px solid var(--line,#eee);font-size:.86rem}
+        [data-panel="loans"] .lp-m span{color:var(--muted)}
+        [data-panel="loans"] .lp-m.strong b{font-size:1.02rem}
+        [data-panel="loans"] .lp-m.bad b{color:#c0402f}
+        [data-panel="loans"] .lp-cols{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+        [data-panel="loans"] .lp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem}
+        [data-panel="loans"] .lp-dt,[data-panel="loans"] .lp-bt{width:100%;border-collapse:collapse;font-size:.82rem}
+        [data-panel="loans"] .lp-dt th,[data-panel="loans"] .lp-dt td{padding:.25em .3em;border-bottom:1px solid var(--line,#eee)}
+        [data-panel="loans"] .lp-bt th{padding:.2em .25em;text-align:left;color:var(--muted);font-size:.74rem}
+        [data-panel="loans"] .lp-bt td{padding:.2em .25em}
+        [data-panel="loans"] .lp-bt input,[data-panel="loans"] .lp-bt select{padding:.35em .4em;border:1px solid var(--line,#dcdcd6);border-radius:5px;font:inherit}
+        [data-panel="loans"] .lp-bal{margin:.7rem 0;padding:.4em .6em;border-radius:6px;font-size:.82rem;font-weight:600}
+        [data-panel="loans"] .lp-bal.ok{background:#eaf6ec;color:#1c6b2c}
+        [data-panel="loans"] .lp-bal.bad{background:#fbece9;color:#c0402f}
+        [data-panel="loans"] .lp-chips{display:flex;flex-direction:column;gap:.3rem;margin-top:.5rem}
+        [data-panel="loans"] .lp-chip{font-size:.78rem;padding:.3em .5em;border-radius:6px;background:#f5f5f3}
+        [data-panel="loans"] .lp-chip b{margin-right:.3em}
+        [data-panel="loans"] .lp-chip.ok b{color:#1c6b2c}
+        [data-panel="loans"] .lp-chip.bad{background:#fbece9}
+        [data-panel="loans"] .lp-chip.bad b{color:#c0402f}
+        [data-panel="loans"] .lp-chip span{color:var(--muted)}
+        [data-panel="loans"] #lp-editor{display:none;gap:1.2rem;grid-template-columns:1fr 1fr}
+        [data-panel="loans"] #lp-results-card{position:sticky;top:1rem}
+        @media(max-width:900px){[data-panel="loans"] #lp-editor{grid-template-columns:1fr}[data-panel="loans"] .lp-cols,[data-panel="loans"] .lp-grid{grid-template-columns:1fr}}
+      </style>
+      <div class="toolrow">
+        <h2>Loan Packages</h2>
+        <span class="sub" style="color:var(--muted);font-size:.8rem">Per-project construction-loan underwriting · computes live</span>
+      </div>
+      <div class="card" style="padding:1rem 1.2rem;margin-bottom:1.2rem;display:flex;gap:.7rem;align-items:center;flex-wrap:wrap">
+        <select id="lp-picker" style="min-width:260px;padding:.5em;border:1px solid var(--line,#dcdcd6);border-radius:6px;font:inherit"></select>
+        <button id="lp-new" class="btn">New project</button>
+        <button id="lp-dup" class="btn">Duplicate</button>
+        <button id="lp-save" class="ghost solid">Save</button>
+        <button id="lp-del" class="btn" style="margin-left:auto">Delete</button>
+        <p id="lp-note" class="form-note" role="status" aria-live="polite" style="width:100%;margin:.2rem 0 0"></p>
+      </div>
+      <div id="lp-editor">
+        <div>
+          <div class="card" style="padding:1.2rem 1.3rem;margin-bottom:1.2rem">
+            <h3 style="margin:0 0 .8rem">Project</h3>
+            <div class="lp-grid" id="lp-prop"></div>
+          </div>
+          <div class="card" style="padding:1.2rem 1.3rem;margin-bottom:1.2rem">
+            <h3 style="margin:0 0 .8rem">Deal inputs &amp; thresholds</h3>
+            <div class="lp-grid" id="lp-in"></div>
+          </div>
+          <div class="card" style="padding:1.2rem 1.3rem">
+            <div class="toolrow" style="margin-bottom:.6rem"><h3 style="margin:0">Construction budget</h3><button id="lp-addline" class="btn">Add line</button></div>
+            <div class="tablescroll"><div id="lp-budget"></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="card" id="lp-results-card" style="padding:1.2rem 1.3rem"><div id="lp-results"></div></div>
+        </div>
+      </div>
+    </section>
   </div>
 </div>
 
 <script src="config.js"></script>
+<script src="loan-calc.js"></script>
 <script>
 (function () {
   var cfg = window.ATERRA_CONFIG || {};
@@ -370,6 +437,8 @@
       renderTeam(rows || []);
       $('#c-team').textContent = (rows || []).length;
     }).catch(fail);
+    // Loan packages (per-project underwriting)
+    loadProjects();
   }
 
   var FN = '/.netlify/functions/';
@@ -573,6 +642,286 @@
     for (var i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
     return arr;
   }
+
+  // ========================================================================
+  // LOAN PACKAGES — per-project construction-loan underwriting
+  // ========================================================================
+  var LP_LIST = [], current = null;
+
+  function lnum(v, d) { v = parseFloat(v); return isFinite(v) ? v : (d || 0); }
+  function money(n) { var x = Math.round(lnum(n)); return (x < 0 ? '-$' : '$') + Math.abs(x).toLocaleString(); }
+  function pct(n, dp) { return (lnum(n) * 100).toFixed(dp == null ? 1 : dp) + '%'; }
+
+  var LP_PROP = [
+    { k: 'name', label: 'Project name' },
+    { k: 'status', label: 'Status', type: 'select', opts: ['draft', 'active', 'submitted', 'closed'] },
+    { k: 'address', label: 'Address' },
+    { k: 'borrower', label: 'Borrower / builder' },
+    { k: 'scope', label: 'Scope' },
+    { k: 'square_footage', label: 'Square footage', type: 'num' },
+    { k: 'stories', label: 'Stories', type: 'num' },
+    { k: 'beds_baths', label: 'Beds / baths' },
+    { k: 'lot_size', label: 'Lot size' },
+    { k: 'term_months', label: 'Term (months)', type: 'num' },
+    { k: 'start_date', label: 'Start date', type: 'date' },
+    { k: 'completion_date', label: 'Completion date', type: 'date' }
+  ];
+  var LP_IN = [
+    { k: 'purchase_price', label: 'Purchase / as-is ($)', type: 'money' },
+    { k: 'closing_costs', label: 'Closing, title & survey ($)', type: 'money' },
+    { k: 'arv_per_sf', label: 'ARV per SF ($)', type: 'money' },
+    { k: 'interest_rate', label: 'Interest rate (annual)', type: 'pct' },
+    { k: 'points_pct', label: 'Lender points', type: 'pct' },
+    { k: 'admin_fee', label: 'Admin / doc fee ($)', type: 'money' },
+    { k: 'contingency_rate', label: 'Contingency rate', type: 'pct' },
+    { k: 'selling_cost_pct', label: 'Selling cost (of ARV)', type: 'pct' },
+    { k: 'escrow_interest', label: 'Escrow interest at closing?', type: 'bool' }
+  ];
+  var LP_RULES = [
+    { k: 'max_ltc', label: 'Max LTC', type: 'pct', rule: true },
+    { k: 'max_ltarv', label: 'Max LTARV', type: 'pct', rule: true },
+    { k: 'min_margin', label: 'Min gross margin', type: 'pct', rule: true },
+    { k: 'min_equity', label: 'Min equity', type: 'pct', rule: true }
+  ];
+  var LP_DIVS = ['10 — Soft Costs, Permits & Fees', '20 — Site Work, Demolition & Utilities',
+    '30 — Foundation & Structure', '40 — Exterior Envelope', '50 — MEP (Rough-In)',
+    '60 — Interior Finishes', '70 — Kitchen, Bath & Fixtures', '80 — Site Improvements, Garage & Final'];
+
+  function lpDefault() {
+    return {
+      name: 'Untitled project', status: 'draft', term_months: 8, interest_rate: 0.095,
+      points_pct: 0.015, admin_fee: 5000, contingency_rate: 0.05, selling_cost_pct: 0.03,
+      escrow_interest: false, purchase_price: 0, closing_costs: 0, arv_per_sf: 0, square_footage: 0,
+      rules: { max_ltc: 0.85, max_ltarv: 0.75, min_contingency: 0.05, min_margin: 0.15,
+               min_equity: 0.15, max_cost_per_sf: 250, max_line_share: 0.15, max_dumpster: 20000 }
+    };
+  }
+
+  function lpField(f, val) {
+    var attr = f.rule ? 'data-rk="' + f.k + '"' : 'data-k="' + f.k + '"';
+    if (f.type === 'bool') {
+      return '<label class="lp-f"><span>' + f.label + '</span><select ' + attr + ' data-t="bool">' +
+        '<option value="false"' + (!val ? ' selected' : '') + '>No — pay monthly</option>' +
+        '<option value="true"' + (val ? ' selected' : '') + '>Yes — escrow</option></select></label>';
+    }
+    if (f.type === 'select') {
+      return '<label class="lp-f"><span>' + f.label + '</span><select ' + attr + ' data-t="text">' +
+        f.opts.map(function (o) { return '<option' + (String(val) === o ? ' selected' : '') + '>' + o + '</option>'; }).join('') +
+        '</select></label>';
+    }
+    var t = f.type === 'date' ? 'date' : ((f.type === 'num' || f.type === 'money' || f.type === 'pct') ? 'number' : 'text');
+    var step = f.type === 'pct' ? '0.05' : (f.type === 'money' ? '100' : 'any');
+    var dv = (val == null || val === '') ? '' : (f.type === 'pct' ? (Math.round(lnum(val) * 10000) / 100) : val);
+    return '<label class="lp-f"><span>' + f.label + '</span><input type="' + t + '" ' + attr +
+      ' data-t="' + (f.type || 'text') + '" step="' + step + '" value="' + esc(dv) + '"></label>';
+  }
+
+  function lpRenderBudget() {
+    var dl = '<datalist id="lp-divs">' + LP_DIVS.map(function (d) { return '<option value="' + esc(d) + '">'; }).join('') + '</datalist>';
+    var rows = current.lines.map(function (ln, i) {
+      return '<tr>' +
+        '<td><input list="lp-divs" data-line="' + i + '" data-col="division" value="' + esc(ln.division || '') + '" style="width:150px"></td>' +
+        '<td><input data-line="' + i + '" data-col="line_item" value="' + esc(ln.line_item || '') + '" style="width:170px"></td>' +
+        '<td><input type="number" step="100" data-line="' + i + '" data-col="amount" value="' + esc(ln.amount || 0) + '" style="width:100px;text-align:right"></td>' +
+        '<td><select data-line="' + i + '" data-col="draw_number"><option value="">—</option>' +
+        [1, 2, 3, 4, 5, 6].map(function (d) { return '<option' + (parseInt(ln.draw_number, 10) === d ? ' selected' : '') + '>' + d + '</option>'; }).join('') +
+        '</select></td>' +
+        '<td><button class="btn" data-rm="' + i + '" style="padding:.2em .55em">✕</button></td></tr>';
+    }).join('');
+    $('#lp-budget').innerHTML = dl + '<table class="lp-bt"><thead><tr><th>Division</th><th>Line item</th><th>Amount</th><th>Draw</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  function lpMrow(label, val, cls) { return '<div class="lp-m' + (cls ? ' ' + cls : '') + '"><span>' + label + '</span><b>' + val + '</b></div>'; }
+
+  function lpRenderResults(o) {
+    var chips = o.rules.map(function (r) {
+      var v = (r.key === 'dumpster' || r.key === 'costSf' || r.key === 'draws') ? money(r.value) : pct(r.value);
+      return '<div class="lp-chip ' + (r.pass ? 'ok' : 'bad') + '"><b>' + (r.pass ? 'PASS' : 'REVIEW') + '</b>' + esc(r.label) + ' <span>(' + v + ')</span></div>';
+    }).join('');
+    var draws = o.draws.map(function (d) {
+      return '<tr><td>Draw ' + d.n + '</td><td style="text-align:right">' + money(d.amount) + '</td><td style="text-align:right">' + pct(d.cumPct) + '</td></tr>';
+    }).join('');
+    var bal = Math.abs(o.balance) < 1;
+    var h = '';
+    h += '<div class="lp-head"><h3 style="margin:0">Underwriting</h3><span class="pill ' + (o.rulesPass === o.rulesTotal ? 'new' : 'contacted') + '">' + o.rulesPass + '/' + o.rulesTotal + ' checks</span></div>';
+    h += '<div class="lp-cols"><div>' +
+      lpMrow('Total loan', money(o.totalLoan)) +
+      lpMrow('&nbsp;&nbsp;Acquisition advance', money(o.acqAdvance)) +
+      lpMrow('&nbsp;&nbsp;Construction holdback', money(o.holdback)) +
+      lpMrow('Loan-to-Cost', pct(o.LTC), o.rules[3].pass ? '' : 'bad') +
+      lpMrow('Loan-to-ARV', pct(o.LTARV), o.rules[4].pass ? '' : 'bad') +
+      lpMrow('Total project cost', money(o.totalCost)) +
+      lpMrow('Borrower equity', money(o.equity) + ' · ' + pct(o.equityPct)) +
+      '</div><div>' +
+      lpMrow('ARV', money(o.ARV) + ' · $' + Math.round(o.arvPerSf) + '/SF') +
+      lpMrow('Gross profit', money(o.grossProfit) + ' · ' + pct(o.grossMargin)) +
+      lpMrow('Net profit (sale)', money(o.netProfit) + ' · ' + pct(o.netMargin)) +
+      lpMrow('Cash-on-cash', pct(o.cashOnCash)) +
+      lpMrow('Cost / SF (hard)', money(o.costPerSf)) +
+      lpMrow('Break-even sale', money(o.breakEven)) +
+      lpMrow('Overrun cushion', pct(o.overrunCushion)) +
+      '</div></div>';
+    h += '<div class="lp-cols" style="margin-top:.4rem"><div>' +
+      lpMrow('Down payment', money(o.downPayment)) +
+      lpMrow('Cash to close', money(o.cashToClose)) +
+      lpMrow('+ interest (monthly)', money(o.interestReserve)) +
+      lpMrow('Total cash in deal', money(o.totalCashIn), 'strong') +
+      '</div><div><table class="lp-dt"><thead><tr><th>Draw</th><th style="text-align:right">Amount</th><th style="text-align:right">Cum&nbsp;%</th></tr></thead><tbody>' + draws + '</tbody></table></div></div>';
+    h += '<div class="lp-bal ' + (bal ? 'ok' : 'bad') + '">' + (bal ? '✓ Sources balance to uses' : '✗ Out of balance: ' + money(o.balance)) + ' · binding: ' + esc(o.binding) + '</div>';
+    h += '<div class="lp-chips">' + chips + '</div>';
+    $('#lp-results').innerHTML = h;
+  }
+
+  function lpRecompute() {
+    if (!current || !current.project || !window.LoanCalc) return;
+    lpRenderResults(window.LoanCalc.compute(current.project, current.lines));
+  }
+
+  function lpRenderEditor() {
+    var p = current.project;
+    $('#lp-prop').innerHTML = LP_PROP.map(function (f) { return lpField(f, p[f.k]); }).join('');
+    $('#lp-in').innerHTML = LP_IN.map(function (f) { return lpField(f, p[f.k]); }).join('') +
+      LP_RULES.map(function (f) { return lpField(f, (p.rules || {})[f.k]); }).join('');
+    lpRenderBudget();
+    lpRecompute();
+    $('#lp-editor').style.display = 'grid';
+  }
+
+  function lpConv(el) {
+    var t = el.getAttribute('data-t'), v = el.value;
+    if (t === 'pct') return lnum(v) / 100;
+    if (t === 'money' || t === 'num') return lnum(v);
+    if (t === 'bool') return el.value === 'true';
+    return v;
+  }
+  function lpOnEdit(e) {
+    var el = e.target;
+    if (!current) return;
+    if (el.hasAttribute('data-k')) { current.project[el.getAttribute('data-k')] = lpConv(el); current.dirty = true; lpRecompute(); }
+    else if (el.hasAttribute('data-rk')) { (current.project.rules = current.project.rules || {})[el.getAttribute('data-rk')] = lpConv(el); current.dirty = true; lpRecompute(); }
+    else if (el.hasAttribute('data-line')) {
+      var ln = current.lines[+el.getAttribute('data-line')]; if (!ln) return;
+      var c = el.getAttribute('data-col');
+      ln[c] = c === 'amount' ? lnum(el.value) : (c === 'draw_number' ? (el.value === '' ? null : +el.value) : el.value);
+      current.dirty = true; lpRecompute();
+    }
+  }
+
+  function lpPayload(p) {
+    var keys = ['name', 'status', 'address', 'borrower', 'scope', 'square_footage', 'stories',
+      'beds_baths', 'lot_size', 'term_months', 'start_date', 'completion_date', 'purchase_price',
+      'closing_costs', 'arv_per_sf', 'interest_rate', 'points_pct', 'admin_fee', 'contingency_rate',
+      'selling_cost_pct', 'escrow_interest', 'rules', 'notes'];
+    var o = {};
+    keys.forEach(function (k) { if (p[k] !== undefined) o[k] = p[k]; });
+    ['square_footage', 'stories', 'term_months', 'purchase_price', 'closing_costs', 'arv_per_sf',
+     'interest_rate', 'points_pct', 'admin_fee', 'contingency_rate', 'selling_cost_pct'].forEach(function (k) {
+      if (o[k] === '' || o[k] == null) o[k] = null; else o[k] = lnum(o[k]);
+    });
+    if (!o.start_date) o.start_date = null;
+    if (!o.completion_date) o.completion_date = null;
+    return o;
+  }
+
+  function lpSelect(id) {
+    if (!id) { current = null; $('#lp-editor').style.display = 'none'; return; }
+    note($('#lp-note'), 'Loading…');
+    Promise.all([
+      api('projects?id=eq.' + id + '&select=*').then(handle),
+      api('project_budget_lines?project_id=eq.' + id + '&select=*&order=sort_order').then(handle)
+    ]).then(function (res) {
+      var p = (res[0] || [])[0];
+      if (!p) { note($('#lp-note'), 'Not found.', 'err'); return; }
+      if (!p.rules) p.rules = lpDefault().rules;
+      current = { isNew: false, dirty: false, project: p, lines: res[1] || [] };
+      lpRenderEditor(); note($('#lp-note'), '', '');
+    }).catch(function () { note($('#lp-note'), 'Could not load project.', 'err'); });
+  }
+
+  function loadProjects(selId) {
+    return api('projects?select=id,name,status&order=created_at.desc').then(handle).then(function (rows) {
+      LP_LIST = rows || [];
+      $('#c-loans').textContent = LP_LIST.length;
+      var cur = selId || (current && current.project && current.project.id) || '';
+      $('#lp-picker').innerHTML = '<option value="">— select a project —</option>' +
+        LP_LIST.map(function (r) {
+          return '<option value="' + r.id + '"' + (String(cur) === String(r.id) ? ' selected' : '') + '>' +
+            esc(r.name || 'Untitled') + ' · ' + esc(r.status || '') + '</option>';
+        }).join('');
+      if (selId) lpSelect(selId);
+      else if (!current && LP_LIST[0]) lpSelect(LP_LIST[0].id);
+    }).catch(fail);
+  }
+
+  function lpSave() {
+    if (!current) return;
+    var p = current.project;
+    if (!p.name) { note($('#lp-note'), 'Give the project a name first.', 'err'); return; }
+    $('#lp-save').disabled = true; note($('#lp-note'), 'Saving…');
+    var body = lpPayload(p);
+    var req = current.isNew
+      ? api('projects', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify(body) }).then(handle).then(function (r) { return r && r[0]; })
+      : api('projects?id=eq.' + p.id, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify(body) }).then(handle).then(function (r) { return (r && r[0]) || p; });
+    req.then(function (saved) {
+      if (!saved || !saved.id) throw new Error('no id');
+      p.id = saved.id; current.isNew = false;
+      return api('project_budget_lines?project_id=eq.' + p.id, { method: 'DELETE', headers: { Prefer: 'return=minimal' } }).then(function () {
+        var payload = current.lines
+          .filter(function (l) { return l.line_item || l.division || lnum(l.amount); })
+          .map(function (l, i) {
+            return { project_id: p.id, division: l.division || null, line_item: l.line_item || null,
+                     amount: lnum(l.amount), draw_number: l.draw_number ? +l.draw_number : null,
+                     scope_notes: l.scope_notes || null, sort_order: i };
+          });
+        if (!payload.length) return;
+        return api('project_budget_lines', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(payload) });
+      });
+    }).then(function () {
+      current.dirty = false; note($('#lp-note'), 'Saved.', 'ok'); loadProjects(p.id);
+    }).catch(function () { note($('#lp-note'), 'Could not save.', 'err'); })
+      .finally(function () { $('#lp-save').disabled = false; });
+  }
+
+  function lpNew() {
+    current = { isNew: true, dirty: true, project: lpDefault(), lines: [] };
+    lpRenderEditor(); $('#lp-picker').value = '';
+    note($('#lp-note'), 'New project — fill it in and Save.', '');
+  }
+  function lpDuplicate() {
+    if (!current || !current.project) return;
+    var p = JSON.parse(JSON.stringify(current.project)); delete p.id; delete p.created_at; delete p.updated_at;
+    p.name = (p.name || 'Project') + ' (copy)'; p.status = 'draft';
+    var lines = current.lines.map(function (l) { var c = JSON.parse(JSON.stringify(l)); delete c.id; delete c.project_id; return c; });
+    current = { isNew: true, dirty: true, project: p, lines: lines };
+    lpRenderEditor(); $('#lp-picker').value = '';
+    note($('#lp-note'), 'Duplicated — Save to persist as a new project.', '');
+  }
+  function lpDelete() {
+    if (!current) return;
+    if (current.isNew || !current.project.id) { current = null; $('#lp-editor').style.display = 'none'; return; }
+    if (!window.confirm('Delete this project and its budget? This cannot be undone.')) return;
+    api('projects?id=eq.' + current.project.id, { method: 'DELETE', headers: { Prefer: 'return=minimal' } })
+      .then(function () { current = null; $('#lp-editor').style.display = 'none'; note($('#lp-note'), 'Deleted.', 'ok'); loadProjects(); });
+  }
+
+  // wire the loan-package controls once
+  $('#lp-picker').addEventListener('change', function () { lpSelect(this.value); });
+  $('#lp-new').addEventListener('click', lpNew);
+  $('#lp-dup').addEventListener('click', lpDuplicate);
+  $('#lp-save').addEventListener('click', lpSave);
+  $('#lp-del').addEventListener('click', lpDelete);
+  $('#lp-addline').addEventListener('click', function () {
+    if (!current) return;
+    current.lines.push({ division: '', line_item: '', amount: 0, draw_number: null });
+    current.dirty = true; lpRenderBudget(); lpRecompute();
+  });
+  $('#lp-editor').addEventListener('input', lpOnEdit);
+  $('#lp-budget').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('[data-rm]') : null;
+    if (!b || !current) return;
+    current.lines.splice(+b.getAttribute('data-rm'), 1);
+    current.dirty = true; lpRenderBudget(); lpRecompute();
+  });
 
   // ---- start ----
   if (session && session.access_token) boot();
