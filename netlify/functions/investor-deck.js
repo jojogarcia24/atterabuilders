@@ -536,5 +536,57 @@ function deck(name) {
   els.forEach(function(el){el.classList.add('reveal');io.observe(el);});
 })();
 </script>
+
+<script>
+/* Deck-engagement beacon — measures active reading time per section and reports
+   it to /api/invest-engagement. When the recipient goes deep on the returns/risk
+   sections, the backend has Voss text JoJo. No PII collected; keyed to the link. */
+(function(){
+  var q = new URLSearchParams(location.search);
+  var raw = (q.get('key') || '').toLowerCase();
+  var m = raw.match(/[0-9a-f]{32}/);
+  var KEY = m ? m[0] : raw;
+  if (!/^[a-f0-9]{16,128}$/.test(KEY)) return;
+  var ENDPOINT = '/api/invest-engagement', SEND_EVERY = 30, MIN_DELTA = 5;
+  var sid = (function(){ try { var v = sessionStorage.getItem('aterra_deck_sid');
+    if (!v) { v = Date.now().toString(36) + Math.random().toString(36).slice(2, 8); sessionStorage.setItem('aterra_deck_sid', v); }
+    return v; } catch (_) { return 'anon'; } })();
+  var secs = [];
+  Array.prototype.forEach.call(document.querySelectorAll('section'), function(s){
+    var eb = s.querySelector('.eyebrow'); if (!eb) return;
+    var label = (eb.textContent || '').replace(/\\s+/g, ' ').trim().slice(0, 80);
+    if (label) secs.push({ el: s, label: label });
+  });
+  if (!secs.length) return;
+  var dwell = {}, total = 0, sent = 0;
+  function activeSection(){
+    var mid = window.innerHeight / 2, best = null, bestD = 1e9;
+    for (var i = 0; i < secs.length; i++) {
+      var r = secs[i].el.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > window.innerHeight) continue;
+      var d = Math.abs((r.top + r.height / 2) - mid);
+      if (d < bestD) { bestD = d; best = secs[i]; }
+    }
+    return best;
+  }
+  setInterval(function(){
+    if (document.visibilityState !== 'visible') return;
+    total++; var a = activeSection(); if (a) dwell[a.label] = (dwell[a.label] || 0) + 1;
+  }, 1000);
+  function send(final){
+    var delta = total - sent;
+    if (delta < (final ? 1 : MIN_DELTA)) return;
+    sent = total;
+    var payload = JSON.stringify({ key: KEY, session_id: sid, dwellSeconds: total, sections: dwell });
+    try {
+      if (final && navigator.sendBeacon) { navigator.sendBeacon(ENDPOINT, new Blob([payload], { type: 'application/json' })); return; }
+      fetch(ENDPOINT, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: payload }).catch(function(){});
+    } catch (_) {}
+  }
+  setInterval(function(){ send(false); }, SEND_EVERY * 1000);
+  document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'hidden') send(true); });
+  window.addEventListener('pagehide', function(){ send(true); });
+})();
+</script>
 </body></html>`;
 }

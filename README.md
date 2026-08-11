@@ -64,6 +64,31 @@ and phone live in `config.js`.
    - `ENGAGEMENT_ALERT_SECONDS` (default `120`), `ADMIN_FALLBACK_EMAIL`, `ADMIN_FALLBACK_USER_ID`
    - `npm install` (pulls `web-push`) so the function can bundle it.
 
+## Investor deck — "going deep" Voss alert
+
+The private investor deck (`/invest?key=…`) now measures **active reading time per
+section** and, when the recipient goes deep on the money — **The Investment /
+Investor Returns / Pro Forma / Risk & Mitigation** — has **Voss (JoJo's assistant)
+text JoJo** a warm/hot-lead alert. This is the Aterra mirror of the Elite Living
+deal-platform packet-engagement alert.
+
+- **Client:** a beacon inside `investor-deck.js` reports `{ key, dwellSeconds,
+  sections }` to `POST /api/invest-engagement` every 30s and on tab-hide.
+- **Server:** `invest-engagement.js` records it on the `investor_links` row (new
+  columns: `first_viewed_at`, `total_dwell_seconds`, `sections_viewed`,
+  `engagement_level`, `engagement_notified_at` — run the updated
+  `supabase/schema.sql`) and, on crossing the thresholds (returns+risk → **hot**;
+  high total dwell / lingering on one section / repeat visits → **warm**, deduped
+  to one alert per link per 30 min), calls the Voss webhook.
+- **Env (optional — both default to the existing Aterra↔Voss shared secret):**
+  - `VOSS_ENGAGEMENT_URL` — Voss inbound webhook (default
+    `https://jojobroker.netlify.app/api/aterra-deck-engagement`)
+  - `VOSS_ENGAGEMENT_TOKEN` — bearer secret for it (defaults to `INVEST_API_TOKEN`,
+    the same token Voss already uses to reach Aterra)
+
+  Voss's side lives in the `jojo` repo (`netlify/functions/aterra-deck-engagement.js`);
+  it validates the same token and texts JoJo via Twilio.
+
 ## How the heat score works
 
 Only **signed-in** visitors are tracked (privacy + signal quality). `track.js` beacons

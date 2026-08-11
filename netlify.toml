@@ -39,6 +39,13 @@
   to = "/.netlify/functions/invest-api/list?action=list"
   status = 200
 
+# Section-dwell engagement beacon from the private investor deck. Fires the
+# "going deep" Voss alert once a recipient crosses the warm/hot thresholds.
+[[redirects]]
+  from = "/api/invest-engagement"
+  to = "/.netlify/functions/invest-engagement"
+  status = 200
+
 # SPA-friendly: serve the function at /.netlify/functions/track-engagement
 [[headers]]
   for = "/sw.js"
