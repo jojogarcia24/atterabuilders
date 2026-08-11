@@ -83,10 +83,24 @@ create table if not exists public.investor_links (
   active         boolean not null default true,
   view_count     integer not null default 0,
   last_viewed_at timestamptz,
-  created_at     timestamptz not null default now()
+  created_at     timestamptz not null default now(),
+  -- Deck-engagement heat (mirrors the Elite Living deal platform). Written by
+  -- the invest-engagement function; used to fire the "going deep" Voss alert.
+  first_viewed_at       timestamptz,
+  total_dwell_seconds   integer not null default 0,   -- MAX active reading time across sessions
+  sections_viewed       jsonb   not null default '{}'::jsonb, -- { "<section label>": <seconds>, ... }
+  engagement_level      text,                          -- last alerted level: 'warm' | 'hot'
+  engagement_notified_at timestamptz                   -- debounce: last Voss alert for this link
 );
 create index if not exists investor_links_token_idx on public.investor_links(token);
 create index if not exists investor_links_created_idx on public.investor_links(created_at desc);
+
+-- Idempotent upgrade for projects created before deck-engagement shipped.
+alter table public.investor_links add column if not exists first_viewed_at        timestamptz;
+alter table public.investor_links add column if not exists total_dwell_seconds    integer not null default 0;
+alter table public.investor_links add column if not exists sections_viewed        jsonb   not null default '{}'::jsonb;
+alter table public.investor_links add column if not exists engagement_level       text;
+alter table public.investor_links add column if not exists engagement_notified_at timestamptz;
 
 -- ================================================================
 -- 3. ENGAGEMENT + ALERTS + PUSH  (service-role function writes these)
