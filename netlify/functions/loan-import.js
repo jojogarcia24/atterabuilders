@@ -29,15 +29,21 @@ exports.handler = async function (event) {
 
     let parsed = parseWorkbook(wb);
     let source = 'structured';
+    let aiDiag = null;
     if (parsed.lines.length < 3 && AI_KEY) {
-      const ai = await aiExtract(sheetsToText(wb));
+      const aiRes = await aiExtract(sheetsToText(wb));
+      aiDiag = aiRes.diag;
+      const ai = aiRes.data;
       if (ai && Array.isArray(ai.budget_lines) && ai.budget_lines.length >= parsed.lines.length) {
         parsed = { fields: Object.assign({}, parsed.fields, cleanFields(ai)), lines: ai.budget_lines.map(normalizeLine).filter(Boolean) };
         source = 'ai';
       }
     }
     if (!parsed.lines.length && !Object.keys(parsed.fields).length) {
-      return json(422, { error: 'Could not read a budget from this file.' + (AI_KEY ? '' : ' (AI extraction is off — set ANTHROPIC_API_KEY to enable it.)') });
+      let msg = 'Could not read a budget from this file.';
+      if (!AI_KEY) msg += ' (AI extraction is off — set ANTHROPIC_API_KEY to enable it.)';
+      else if (aiDiag) msg += ' AI extraction ran but did not help — ' + aiDiag;
+      return json(422, { error: msg, ai: aiDiag || null });
     }
 
     const name = parsed.fields.name || (body.filename || 'Imported project').replace(/\.[a-z]+$/i, '');
@@ -243,6 +249,9 @@ function cleanFields(ai) {
   ['name', 'address', 'borrower', 'scope', 'beds_baths'].forEach(function (k) { if (ai[k]) f[k] = String(ai[k]); });
   return f;
 }
+// Returns { data, diag }. data is the parsed object or null; diag is a short
+// human-readable reason it did/didn't work, surfaced in the import response so
+// a misconfigured key or model is visible without digging into Netlify logs.
 async function aiExtract(text) {
   try {
     const prompt = 'Extract a construction-loan project from this spreadsheet text. Return ONLY JSON with keys: ' +
@@ -254,12 +263,21 @@ async function aiExtract(text) {
       headers: { 'x-api-key': AI_KEY, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: AI_MODEL, max_tokens: 4000, messages: [{ role: 'user', content: prompt }] })
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      let detail = '';
+      try { const err = await res.json(); detail = (err.error && err.error.message) || JSON.stringify(err).slice(0, 200); }
+      catch (e) { detail = (await res.text().catch(function () { return ''; })).slice(0, 200); }
+      return { data: null, diag: 'the API returned ' + res.status + ' for model "' + AI_MODEL + '"' + (detail ? ': ' + detail : '') + '.' };
+    }
     const data = await res.json();
     const txt = (data.content && data.content[0] && data.content[0].text) || '';
     const m = txt.match(/\{[\s\S]*\}/);
-    return m ? JSON.parse(m[0]) : null;
-  } catch (e) { return null; }
+    if (!m) return { data: null, diag: 'the model replied but returned no JSON we could parse.' };
+    try { return { data: JSON.parse(m[0]), diag: null }; }
+    catch (e) { return { data: null, diag: 'the model returned malformed JSON.' }; }
+  } catch (e) {
+    return { data: null, diag: 'the request failed (' + String((e && e.message) || e) + ').' };
+  }
 }
 
 exports.parseWorkbook = parseWorkbook;
