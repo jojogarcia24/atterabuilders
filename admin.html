@@ -236,6 +236,21 @@
         [data-panel="loans"] .lp-check.bad{background:#fbece9}
         [data-panel="loans"] .lp-check.bad .dot{background:#c0402f}
         [data-panel="loans"] .lp-check .cv{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums}
+        [data-panel="loans"] .lp-switch{display:inline-flex;background:#eceae4;border-radius:8px;padding:3px;margin-bottom:.9rem}
+        [data-panel="loans"] .lp-switch button{border:0;background:transparent;padding:.4em .9em;border-radius:6px;font:inherit;font-size:.82rem;cursor:pointer;color:var(--muted)}
+        [data-panel="loans"] .lp-switch button.on{background:#fff;color:#111;box-shadow:0 1px 2px rgba(0,0,0,.08);font-weight:600}
+        [data-panel="loans"] .lp-donutwrap{display:flex;gap:1rem;align-items:center;margin:.4rem 0 .2rem}
+        [data-panel="loans"] .lp-legend{font-size:.8rem;display:grid;gap:.35rem}
+        [data-panel="loans"] .lp-legend .li{display:flex;align-items:center;gap:.45rem}
+        [data-panel="loans"] .lp-legend .sw{width:11px;height:11px;border-radius:3px;flex:none}
+        [data-panel="loans"] .lp-legend .lv{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--muted)}
+        [data-panel="loans"] .lp-ds-row{display:grid;grid-template-columns:78px 1fr 96px;gap:.55rem;align-items:center;font-size:.8rem;margin:.3rem 0}
+        [data-panel="loans"] .lp-ds-row .bar{height:12px;background:#f0eeE8;border-radius:6px;overflow:hidden;position:relative}
+        [data-panel="loans"] .lp-ds-row .bar i{display:block;height:100%;border-radius:6px}
+        [data-panel="loans"] .lp-ds-row .amt{text-align:right;font-variant-numeric:tabular-nums}
+        [data-panel="loans"] .lp-ptable{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:.3rem}
+        [data-panel="loans"] .lp-ptable th{text-align:left;color:var(--muted);font-size:.72rem;font-weight:700;padding:.3em .35em;border-bottom:1px solid var(--line,#e7e7e2)}
+        [data-panel="loans"] .lp-ptable td{padding:.32em .35em;border-bottom:1px solid var(--line,#f0f0ec);font-variant-numeric:tabular-nums}
         @media(max-width:900px){[data-panel="loans"] #lp-editor{grid-template-columns:1fr}[data-panel="loans"] .lp-cols,[data-panel="loans"] .lp-grid,[data-panel="loans"] .lp-kpis{grid-template-columns:1fr}}
       </style>
       <div class="toolrow">
@@ -247,6 +262,12 @@
         <button id="lp-new" class="btn">New project</button>
         <button id="lp-dup" class="btn">Duplicate</button>
         <button id="lp-save" class="ghost solid">Save</button>
+        <select id="lp-print" title="Print / PDF" style="padding:.5em;border:1px solid var(--line,#dcdcd6);border-radius:6px;font:inherit">
+          <option value="">Print / PDF…</option>
+          <option value="lender">Lender one-pager</option>
+          <option value="capital">Capital partners sheet</option>
+          <option value="budget">Budget &amp; draw schedule</option>
+        </select>
         <button id="lp-del" class="btn" style="margin-left:auto">Delete</button>
         <p id="lp-note" class="form-note" role="status" aria-live="polite" style="width:100%;margin:.2rem 0 0"></p>
       </div>
@@ -259,6 +280,10 @@
           <div class="card" style="padding:1.2rem 1.3rem;margin-bottom:1.2rem">
             <h3 style="margin:0 0 .8rem">Deal inputs &amp; thresholds</h3>
             <div class="lp-grid" id="lp-in"></div>
+          </div>
+          <div class="card" style="padding:1.2rem 1.3rem;margin-bottom:1.2rem">
+            <h3 style="margin:0 0 .8rem">Capital partners</h3>
+            <div class="lp-grid" id="lp-cap"></div>
           </div>
           <div class="card" style="padding:1.2rem 1.3rem">
             <div class="toolrow" style="margin-bottom:.6rem"><h3 style="margin:0">Construction budget</h3><button id="lp-addline" class="btn">Add line</button></div>
@@ -706,6 +731,14 @@
     { k: 'min_margin', label: 'Min gross margin', type: 'pct', rule: true },
     { k: 'min_equity', label: 'Min equity', type: 'pct', rule: true }
   ];
+  var LP_CAP = [
+    { k: 'num_partners', label: '# capital partners', type: 'num', cap: true },
+    { k: 'capital_per_partner', label: 'Capital per partner ($)', type: 'money', cap: true },
+    { k: 'ownership_per_capital', label: 'Ownership per partner', type: 'pct', cap: true },
+    { k: 'operating_partners', label: '# operating partners', type: 'num', cap: true },
+    { k: 'working_capital', label: 'Working capital ($)', type: 'money', cap: true },
+    { k: 'hold_months', label: 'Hold (months)', type: 'num', cap: true }
+  ];
   var LP_DIVS = ['10 — Soft Costs, Permits & Fees', '20 — Site Work, Demolition & Utilities',
     '30 — Foundation & Structure', '40 — Exterior Envelope', '50 — MEP (Rough-In)',
     '60 — Interior Finishes', '70 — Kitchen, Bath & Fixtures', '80 — Site Improvements, Garage & Final'];
@@ -716,12 +749,14 @@
       points_pct: 0.015, admin_fee: 5000, contingency_rate: 0.05, selling_cost_pct: 0.03,
       escrow_interest: false, purchase_price: 0, closing_costs: 0, arv_per_sf: 0, square_footage: 0,
       rules: { max_ltc: 0.85, max_ltarv: 0.75, min_contingency: 0.05, min_margin: 0.15,
-               min_equity: 0.15, max_cost_per_sf: 250, max_line_share: 0.15, max_dumpster: 20000 }
+               min_equity: 0.15, max_cost_per_sf: 250, max_line_share: 0.15, max_dumpster: 20000 },
+      capital: { num_partners: 2, capital_per_partner: 300000, ownership_per_capital: 0.125,
+                 operating_partners: 3, working_capital: 130000, hold_months: 10 }
     };
   }
 
   function lpField(f, val) {
-    var attr = f.rule ? 'data-rk="' + f.k + '"' : 'data-k="' + f.k + '"';
+    var attr = f.cap ? 'data-ck="' + f.k + '"' : (f.rule ? 'data-rk="' + f.k + '"' : 'data-k="' + f.k + '"');
     if (f.type === 'bool') {
       return '<label class="lp-f"><span>' + f.label + '</span><select ' + attr + ' data-t="bool">' +
         '<option value="false"' + (!val ? ' selected' : '') + '>No — pay monthly</option>' +
@@ -766,7 +801,7 @@
       '<b>' + pct(val) + ' <span style="color:var(--muted);font-weight:400">/ ' + pct(cap, 0) + ' cap</span></b></div>' +
       '<div class="gt"><i class="gf" style="width:' + (frac * 100).toFixed(1) + '%;background:' + (pass ? '#3f6f52' : '#c0402f') + '"></i></div></div>';
   }
-  function lpRenderResults(o) {
+  function lpUnderwritingHTML(o) {
     var maxDraw = Math.max.apply(null, o.draws.map(function (d) { return d.amount; }).concat([1]));
     var draws = o.draws.map(function (d) {
       return '<div class="lp-draw-row"><span>Draw ' + d.n + '</span>' +
@@ -810,18 +845,187 @@
       lpKpi('Construction holdback', money(o.holdback), 'drawn over the build') +
       lpKpi('Down payment', money(o.downPayment), 'borrower at closing') +
       '</div>';
+    h += '<div class="lp-donutwrap">' + lpDonut([
+        { label: 'Loan', value: o.totalLoan, color: '#3f6f52' },
+        { label: 'Equity', value: o.equity, color: '#c9a24b' }
+      ], pct(o.LTC, 0), 'loan / cost') +
+      '<div class="lp-legend">' +
+        legendItem('#3f6f52', 'Total loan', money(o.totalLoan)) +
+        legendItem('#c9a24b', 'Borrower equity', money(o.equity)) +
+        legendItem('#8C8A85', 'Total project cost', money(o.totalCost)) +
+      '</div></div>';
     // draw schedule bar chart
     h += '<div class="lp-sec">Draw schedule</div><div class="lp-draws">' + draws + '</div>';
     // balance ribbon
     h += '<div class="lp-bal ' + (bal ? 'ok' : 'bad') + '">' + (bal ? '✓ Sources balance to uses' : '✗ Out of balance: ' + money(o.balance)) + ' · binding constraint: ' + esc(o.binding) + '</div>';
     // checks
     h += '<div class="lp-sec">Underwriting checks</div><div class="lp-checks">' + checks + '</div>';
-    $('#lp-results').innerHTML = h;
+    return h;
+  }
+
+  function lpDonut(segs, top, bottom) {
+    var total = segs.reduce(function (a, s) { return a + Math.max(0, s.value); }, 0) || 1;
+    var R = 42, C = 2 * Math.PI * R, off = 0;
+    var arcs = segs.map(function (s) {
+      var len = Math.max(0, s.value) / total * C;
+      var el = '<circle r="' + R + '" cx="60" cy="60" fill="none" stroke="' + s.color + '" stroke-width="15" ' +
+        'stroke-dasharray="' + len.toFixed(2) + ' ' + (C - len).toFixed(2) + '" stroke-dashoffset="' + (-off).toFixed(2) + '" transform="rotate(-90 60 60)"/>';
+      off += len; return el;
+    }).join('');
+    return '<svg viewBox="0 0 120 120" width="112" height="112" style="flex:none">' + arcs +
+      '<text x="60" y="58" text-anchor="middle" font-size="15" font-weight="700" fill="#111">' + top + '</text>' +
+      (bottom ? '<text x="60" y="74" text-anchor="middle" font-size="8" fill="#8C8A85">' + bottom + '</text>' : '') + '</svg>';
+  }
+  function legendItem(color, label, val) {
+    return '<div class="li"><span class="sw" style="background:' + color + '"></span>' + esc(label) + '<span class="lv">' + val + '</span></div>';
+  }
+
+  function lpCapitalHTML(o) {
+    var c = window.LoanCalc.capital(o, current.project.capital || {});
+    var maxAbs = Math.max.apply(null, c.downside.map(function (d) { return Math.abs(d.perCapital); }).concat([1]));
+    var ds = c.downside.map(function (d) {
+      var pos = d.perCapital >= 0;
+      return '<div class="lp-ds-row"><span>$' + Math.round(d.psf) + '/SF' + (d.base ? ' •' : '') + '</span>' +
+        '<div class="bar"><i style="width:' + (Math.abs(d.perCapital) / maxAbs * 100).toFixed(1) + '%;background:' + (pos ? '#3f6f52' : '#c0402f') + '"></i></div>' +
+        '<span class="amt">' + money(d.perCapital) + '<br><span style="color:var(--muted);font-size:.72rem">' + pct(d.roc) + ' RoC</span></span></div>';
+    }).join('');
+    var partners = '';
+    for (var i = 1; i <= c.ops; i++) partners += '<tr><td>Operating ' + i + '</td><td>—</td><td>' + pct(c.opEach) + '</td><td>' + money(c.profitPerOp) + '</td><td>—</td></tr>';
+    for (var j = 1; j <= c.np; j++) partners += '<tr><td>Capital ' + j + '</td><td>' + money(c.cpp) + '</td><td>' + pct(c.ownEach) + '</td><td>' + money(c.profitPerCap) + '</td><td>' + pct(c.roc) + '</td></tr>';
+    var h = '';
+    h += '<div class="lp-head"><h3 style="margin:0">Capital Partners</h3><span class="pill ' + (c.surplus >= 0 ? 'new' : 'contacted') + '">' + (c.surplus >= 0 ? 'Funded' : 'Short') + '</span></div>';
+    h += '<div class="lp-kpis">' +
+      lpKpi('Capital raised', money(c.raised), c.np + ' × ' + money(c.cpp)) +
+      lpKpi('Total cash need', money(c.cashNeed), 'equity + working capital') +
+      lpKpi('Reserve / surplus', money(c.surplus), 'cushion after the deal', c.surplus >= 0 ? 'good' : '') +
+      lpKpi('Return on capital', pct(c.roc), pct(c.annual) + ' annualized', 'good') +
+      '</div>';
+    h += '<div class="lp-sec">Ownership split</div>';
+    h += '<div class="lp-donutwrap">' + lpDonut([
+        { label: 'Capital partners', value: c.capOwnTotal, color: '#c9a24b' },
+        { label: 'Operating partners', value: c.opOwnTotal, color: '#3f6f52' }
+      ], pct(c.capOwnTotal, 0), 'to capital') +
+      '<div class="lp-legend">' +
+        legendItem('#c9a24b', c.np + ' capital partners', pct(c.capOwnTotal)) +
+        legendItem('#3f6f52', c.ops + ' operating partners', pct(c.opOwnTotal)) +
+      '</div></div>';
+    h += '<div class="lp-sec">Per-partner</div>';
+    h += '<table class="lp-ptable"><thead><tr><th>Partner</th><th>Capital in</th><th>Own</th><th>Profit</th><th>RoC</th></tr></thead><tbody>' + partners + '</tbody></table>';
+    h += '<div class="lp-sec">Downside — profit per capital partner by sale price</div><div>' + ds + '</div>';
+    h += '<div class="lp-bal ok" style="background:#f6f6f3;color:#333">Break-even sale ≈ $' + Math.round(c.breakEvenPsf) + '/SF · below that, partner capital is at risk</div>';
+    return h;
+  }
+
+  // ---- print / PDF (opens a styled document per audience) ----
+  function lpPrint(kind) {
+    if (!current || !current.project) return;
+    var o = window.LoanCalc.compute(current.project, current.lines);
+    var cap = window.LoanCalc.capital(o, current.project.capital || {});
+    var w = window.open('', '_blank');
+    if (!w) { note($('#lp-note'), 'Allow pop-ups to print.', 'err'); return; }
+    w.document.open(); w.document.write(lpPrintDoc(kind, current.project, o, cap)); w.document.close();
+    w.focus();
+    setTimeout(function () { try { w.print(); } catch (e) {} }, 400);
+  }
+  function lpPrintDoc(kind, p, o, c) {
+    var title = kind === 'capital' ? 'Capital Partner Opportunity' : kind === 'budget' ? 'Construction Budget & Draw Schedule' : 'Construction Loan Request';
+    var body = kind === 'capital' ? lpPBCapital(p, o, c) : kind === 'budget' ? lpPBBudget(p, o) : lpPBLender(p, o);
+    var css = "*{box-sizing:border-box}body{font-family:Georgia,'Times New Roman',serif;color:#1a1a1a;margin:0;background:#fff}" +
+      ".pg{max-width:760px;margin:0 auto;padding:40px}" +
+      ".lh{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #1a1a1a;padding-bottom:8px}" +
+      ".brand{font-size:20px;letter-spacing:3px;font-weight:700}.doc{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#666}" +
+      "h1{font-size:22px;margin:18px 0 2px}.sub{color:#555;font-size:13px;margin-bottom:6px}" +
+      "h2{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#666;border-bottom:1px solid #ddd;padding-bottom:4px;margin:20px 0 8px}" +
+      "table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:5px 4px;text-align:left}" +
+      "td.v,th.v{text-align:right;font-variant-numeric:tabular-nums}tr+tr td{border-top:1px solid #eee}" +
+      ".kpis{display:flex;gap:10px;margin:12px 0}.kpi{flex:1;border:1px solid #ddd;border-radius:8px;padding:10px}" +
+      ".kpi .k{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:#777}.kpi .v{font-size:16px;font-weight:700;margin-top:3px}" +
+      ".tot td{border-top:2px solid #1a1a1a;font-weight:700}.ft{margin-top:24px;padding-top:8px;border-top:1px solid #ddd;font-size:10px;color:#888}" +
+      "@media print{.pg{padding:0}@page{margin:14mm}}";
+    return '<!doctype html><html><head><meta charset="utf-8"><title>' + esc(p.name || 'Project') + ' — ' + title + '</title><style>' + css + '</style></head><body><div class="pg">' +
+      '<div class="lh"><div class="brand">ATERRA BUILDERS</div><div class="doc">' + title + '</div></div>' +
+      '<h1>' + esc(p.address || p.name || '') + '</h1>' +
+      '<div class="sub">' + esc(p.scope || '') + (p.square_footage ? ' · ' + Number(p.square_footage).toLocaleString() + ' SF' : '') + (p.beds_baths ? ' · ' + esc(p.beds_baths) : '') + '</div>' +
+      body +
+      '<div class="ft">Prepared ' + new Date().toLocaleDateString() + ' · Aterra Builders · figures modeled from the project budget. Proposal for discussion, not an offer.</div>' +
+      '</div></body></html>';
+  }
+  function lpPBLender(p, o) {
+    var divs = Object.keys(o.divisions).sort();
+    var budget = divs.map(function (d) { return '<tr><td>' + esc(d) + '</td><td class="v">' + money(o.divisions[d]) + '</td></tr>'; }).join('');
+    var draws = o.draws.map(function (d) { return '<tr><td>Draw ' + d.n + '</td><td class="v">' + money(d.amount) + '</td><td class="v">' + pct(d.cumPct) + '</td></tr>'; }).join('');
+    return '<div class="kpis">' +
+      '<div class="kpi"><div class="k">Total loan</div><div class="v">' + money(o.totalLoan) + '</div></div>' +
+      '<div class="kpi"><div class="k">Loan-to-Cost</div><div class="v">' + pct(o.LTC) + '</div></div>' +
+      '<div class="kpi"><div class="k">Loan-to-ARV</div><div class="v">' + pct(o.LTARV) + '</div></div>' +
+      '<div class="kpi"><div class="k">Net profit</div><div class="v">' + money(o.netProfit) + '</div></div></div>' +
+      '<h2>Loan request</h2><table>' +
+      '<tr><td>Purchase / as-is value</td><td class="v">' + money(p.purchase_price) + '</td></tr>' +
+      '<tr><td>Acquisition advance</td><td class="v">' + money(o.acqAdvance) + '</td></tr>' +
+      '<tr><td>Construction holdback</td><td class="v">' + money(o.holdback) + '</td></tr>' +
+      '<tr class="tot"><td>Total loan requested</td><td class="v">' + money(o.totalLoan) + '</td></tr>' +
+      '<tr><td>Borrower equity</td><td class="v">' + money(o.equity) + ' (' + pct(o.equityPct) + ')</td></tr>' +
+      '<tr><td>Estimated ARV</td><td class="v">' + money(o.ARV) + ' ($' + Math.round(o.arvPerSf) + '/SF)</td></tr>' +
+      '<tr><td>Projected net profit</td><td class="v">' + money(o.netProfit) + ' (' + pct(o.netMargin) + ')</td></tr></table>' +
+      '<h2>Construction budget by division</h2><table>' + budget +
+      '<tr class="tot"><td>Hard construction costs</td><td class="v">' + money(o.hardCost) + '</td></tr>' +
+      '<tr><td>Contingency (' + pct(o.contRate, 0) + ')</td><td class="v">' + money(o.contingency) + '</td></tr>' +
+      '<tr class="tot"><td>Total construction budget</td><td class="v">' + money(o.totalBudget) + '</td></tr></table>' +
+      '<h2>Draw schedule</h2><table><tr><th>Milestone</th><th class="v">Amount</th><th class="v">Cumulative</th></tr>' + draws + '</table>';
+  }
+  function lpPBBudget(p, o) {
+    var byDiv = {};
+    (current.lines || []).forEach(function (l) { var d = l.division || 'Other'; (byDiv[d] = byDiv[d] || []).push(l); });
+    var sections = Object.keys(byDiv).sort().map(function (d) {
+      var rows = byDiv[d].map(function (l) {
+        return '<tr><td>' + esc(l.line_item || '') + '</td><td class="v">' + (l.draw_number ? 'Draw ' + l.draw_number : '—') + '</td><td class="v">' + money(l.amount) + '</td></tr>';
+      }).join('');
+      return '<h2>' + esc(d) + '</h2><table><tr><th>Line item</th><th class="v">Draw</th><th class="v">Amount</th></tr>' + rows +
+        '<tr class="tot"><td>Subtotal</td><td></td><td class="v">' + money(o.divisions[d] || 0) + '</td></tr></table>';
+    }).join('');
+    var draws = o.draws.map(function (d) { return '<tr><td>Draw ' + d.n + '</td><td class="v">' + money(d.amount) + '</td><td class="v">' + pct(d.cumPct) + '</td></tr>'; }).join('');
+    return sections +
+      '<h2>Totals</h2><table><tr><td>Hard construction costs</td><td class="v">' + money(o.hardCost) + '</td></tr>' +
+      '<tr><td>Contingency (' + pct(o.contRate, 0) + ')</td><td class="v">' + money(o.contingency) + '</td></tr>' +
+      '<tr class="tot"><td>Total construction budget</td><td class="v">' + money(o.totalBudget) + '</td></tr></table>' +
+      '<h2>Draw schedule</h2><table><tr><th>Draw</th><th class="v">Amount</th><th class="v">Cumulative</th></tr>' + draws + '</table>';
+  }
+  function lpPBCapital(p, o, c) {
+    var ds = c.downside.map(function (d) { return '<tr><td>$' + Math.round(d.psf) + '/SF' + (d.base ? ' (base)' : '') + '</td><td class="v">' + money(d.sale) + '</td><td class="v">' + money(d.netProfit) + '</td><td class="v">' + money(d.perCapital) + '</td><td class="v">' + pct(d.roc) + '</td></tr>'; }).join('');
+    var partners = '';
+    for (var i = 1; i <= c.ops; i++) partners += '<tr><td>Operating partner ' + i + '</td><td class="v">—</td><td class="v">' + pct(c.opEach) + '</td><td class="v">' + money(c.profitPerOp) + '</td></tr>';
+    for (var j = 1; j <= c.np; j++) partners += '<tr><td>Capital partner ' + j + '</td><td class="v">' + money(c.cpp) + '</td><td class="v">' + pct(c.ownEach) + '</td><td class="v">' + money(c.profitPerCap) + '</td></tr>';
+    return '<div class="kpis">' +
+      '<div class="kpi"><div class="k">Capital raised</div><div class="v">' + money(c.raised) + '</div></div>' +
+      '<div class="kpi"><div class="k">Return on capital</div><div class="v">' + pct(c.roc) + '</div></div>' +
+      '<div class="kpi"><div class="k">Annualized</div><div class="v">' + pct(c.annual) + '</div></div>' +
+      '<div class="kpi"><div class="k">Hold</div><div class="v">' + c.hold + ' mo</div></div></div>' +
+      '<h2>Capital stack</h2><table>' +
+      '<tr><td>Senior construction loan (first lien)</td><td class="v">' + money(c.seniorLoan) + '</td></tr>' +
+      '<tr><td>Partner capital raised</td><td class="v">' + money(c.raised) + '</td></tr>' +
+      '<tr class="tot"><td>Total capitalization</td><td class="v">' + money(c.seniorLoan + c.raised) + '</td></tr></table>' +
+      '<h2>Cash need &amp; reserve</h2><table>' +
+      '<tr><td>Cash required (equity + working capital)</td><td class="v">' + money(c.cashNeed) + '</td></tr>' +
+      '<tr><td>Capital raised</td><td class="v">' + money(c.raised) + '</td></tr>' +
+      '<tr class="tot"><td>Reserve / (shortfall)</td><td class="v">' + money(c.surplus) + '</td></tr></table>' +
+      '<h2>Projected returns</h2><table>' +
+      '<tr><td>Net profit to partnership</td><td class="v">' + money(o.netProfit) + '</td></tr>' +
+      '<tr><td>Profit per capital partner (' + pct(c.ownEach) + ' each)</td><td class="v">' + money(c.profitPerCap) + '</td></tr>' +
+      '<tr><td>Return on capital</td><td class="v">' + pct(c.roc) + ' (' + pct(c.annual) + ' annualized)</td></tr></table>' +
+      '<h2>Partner summary</h2><table><tr><th>Partner</th><th class="v">Capital in</th><th class="v">Ownership</th><th class="v">Projected profit</th></tr>' + partners + '</table>' +
+      '<h2>Downside — sale-price sensitivity</h2><table><tr><th>Sale $/SF</th><th class="v">Sale price</th><th class="v">Net profit</th><th class="v">Per capital partner</th><th class="v">RoC</th></tr>' + ds + '</table>' +
+      '<p style="font-size:11px;color:#666;margin-top:8px">Break-even sale ≈ $' + Math.round(c.breakEvenPsf) + '/SF; below that, partner capital is at risk. Operating partners contribute sweat equity; capital partners are passive. Review with a securities attorney before accepting capital.</p>';
   }
 
   function lpRecompute() {
     if (!current || !current.project || !window.LoanCalc) return;
-    lpRenderResults(window.LoanCalc.compute(current.project, current.lines));
+    var o = window.LoanCalc.compute(current.project, current.lines);
+    current.calc = o;
+    var view = current.view === 'cap' ? 'cap' : 'uw';
+    var sw = '<div class="lp-switch">' +
+      '<button data-view="uw" class="' + (view === 'uw' ? 'on' : '') + '">Underwriting</button>' +
+      '<button data-view="cap" class="' + (view === 'cap' ? 'on' : '') + '">Capital Partners</button></div>';
+    $('#lp-results').innerHTML = sw + (view === 'cap' ? lpCapitalHTML(o) : lpUnderwritingHTML(o));
   }
 
   function lpRenderEditor() {
@@ -829,6 +1033,7 @@
     $('#lp-prop').innerHTML = LP_PROP.map(function (f) { return lpField(f, p[f.k]); }).join('');
     $('#lp-in').innerHTML = LP_IN.map(function (f) { return lpField(f, p[f.k]); }).join('') +
       LP_RULES.map(function (f) { return lpField(f, (p.rules || {})[f.k]); }).join('');
+    $('#lp-cap').innerHTML = LP_CAP.map(function (f) { return lpField(f, (p.capital || {})[f.k]); }).join('');
     lpRenderBudget();
     lpRecompute();
     $('#lp-editor').style.display = 'grid';
@@ -846,6 +1051,7 @@
     if (!current) return;
     if (el.hasAttribute('data-k')) { current.project[el.getAttribute('data-k')] = lpConv(el); current.dirty = true; lpRecompute(); }
     else if (el.hasAttribute('data-rk')) { (current.project.rules = current.project.rules || {})[el.getAttribute('data-rk')] = lpConv(el); current.dirty = true; lpRecompute(); }
+    else if (el.hasAttribute('data-ck')) { (current.project.capital = current.project.capital || {})[el.getAttribute('data-ck')] = lpConv(el); current.dirty = true; lpRecompute(); }
     else if (el.hasAttribute('data-line')) {
       var ln = current.lines[+el.getAttribute('data-line')]; if (!ln) return;
       var c = el.getAttribute('data-col');
@@ -858,7 +1064,7 @@
     var keys = ['name', 'status', 'address', 'borrower', 'scope', 'square_footage', 'stories',
       'beds_baths', 'lot_size', 'term_months', 'start_date', 'completion_date', 'purchase_price',
       'closing_costs', 'arv_per_sf', 'interest_rate', 'points_pct', 'admin_fee', 'contingency_rate',
-      'selling_cost_pct', 'escrow_interest', 'rules', 'notes'];
+      'selling_cost_pct', 'escrow_interest', 'rules', 'capital', 'notes'];
     var o = {};
     keys.forEach(function (k) { if (p[k] !== undefined) o[k] = p[k]; });
     ['square_footage', 'stories', 'term_months', 'purchase_price', 'closing_costs', 'arv_per_sf',
@@ -963,6 +1169,12 @@
     current.dirty = true; lpRenderBudget(); lpRecompute();
   });
   $('#lp-editor').addEventListener('input', lpOnEdit);
+  $('#lp-print').addEventListener('change', function () { var k = this.value; this.value = ''; if (k) lpPrint(k); });
+  $('#lp-results').addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('[data-view]') : null;
+    if (!b || !current) return;
+    current.view = b.getAttribute('data-view'); lpRecompute();
+  });
   $('#lp-budget').addEventListener('click', function (e) {
     var b = e.target.closest ? e.target.closest('[data-rm]') : null;
     if (!b || !current) return;
