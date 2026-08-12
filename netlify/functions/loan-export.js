@@ -73,6 +73,7 @@ exports.buildWorkbook = buildWorkbook;
 // styling helpers
 // ---------------------------------------------------------------------------
 function solid(argb) { return { type: 'pattern', pattern: 'solid', fgColor: { argb: argb } }; }
+function num(v) { v = parseFloat(v); return isFinite(v) ? v : 0; }
 
 function put(ws, r, c, v, o) {
   o = o || {};
@@ -127,6 +128,8 @@ function buildWorkbook(p, lines, o, cap) {
   sheetDraws(wb, o);
   sheetRules(wb, o);
   sheetCapital(wb, p, o, cap);
+  sheetReo(wb, p);
+  sheetDocs(wb, p);
   return wb;
 }
 
@@ -400,4 +403,74 @@ function sheetCapital(wb, p, o, c) {
   r++;
   ws.mergeCells(r, 1, r, 4);
   put(ws, r, 1, 'Break-even sale ≈ $' + Math.round(c.breakEvenPsf) + '/SF. Proposal for discussion, not an offer. Review with a securities attorney before accepting capital.', { size: 9, italic: true, color: T.gray, wrap: true });
+}
+
+// ---- REO & Track Record ----------------------------------------------------
+function sheetReo(wb, p) {
+  const reo = p.reo || {};
+  const ws = wb.addWorksheet('REO & Track Record', { views: [{ showGridLines: false }] });
+  ws.getColumn(1).width = 34;
+  for (let c = 2; c <= 9; c++) ws.getColumn(c).width = 14;
+  titleBand(ws, 9, 'SCHEDULE OF REAL ESTATE OWNED & TRACK RECORD', 'Guarantor: ' + (reo.guarantor || '______________'));
+  let r = 4;
+  band(ws, r, 1, 9, 'SECTION A — REAL ESTATE CURRENTLY OWNED'); r++;
+  ['Address', 'Type', 'Acquired', 'Purchase', 'Market Value', 'Loan Balance', 'Lender', 'Monthly Pmt', 'Monthly Rent']
+    .forEach(function (t, i) { put(ws, r, i + 1, t, { bold: true, color: T.navy, fill: T.ltblue, align: i >= 3 && i !== 6 ? 'right' : 'left' }); });
+  r++;
+  const secA = reo.section_a || [];
+  secA.forEach(function (x) {
+    put(ws, r, 1, x.address || '', { size: 10 }); put(ws, r, 2, x.type || '', { size: 10 }); put(ws, r, 3, x.acquired || '', { size: 10 });
+    put(ws, r, 4, num(x.purchase), { fmt: MONEY, align: 'right' }); put(ws, r, 5, num(x.value), { fmt: MONEY, align: 'right' });
+    put(ws, r, 6, num(x.loan), { fmt: MONEY, align: 'right' }); put(ws, r, 7, x.lender || '', { size: 10 });
+    put(ws, r, 8, num(x.payment), { fmt: MONEY, align: 'right' }); put(ws, r, 9, num(x.rent), { fmt: MONEY, align: 'right' });
+    r++;
+  });
+  if (!secA.length) { ws.mergeCells(r, 1, r, 9); put(ws, r, 1, '(none reported — a blank Section A is a valid submission)', { italic: true, color: T.gray }); r++; }
+  r++;
+  band(ws, r, 1, 9, 'SECTION B — CLOSED TRANSACTION HISTORY'); r++;
+  ['Address', 'Role', 'Sale Price', 'Close Date', 'Year', 'Notes']
+    .forEach(function (t, i) { put(ws, r, i + 1, t, { bold: true, color: T.navy, fill: T.ltblue, align: i === 2 ? 'right' : 'left' }); });
+  r++;
+  const secB = reo.section_b || []; let bTotal = 0;
+  secB.forEach(function (x) {
+    put(ws, r, 1, x.address || '', { size: 10 }); put(ws, r, 2, x.role || '', { size: 10 });
+    put(ws, r, 3, num(x.price), { fmt: MONEY, align: 'right' }); put(ws, r, 4, x.close_date || '', { size: 10 });
+    put(ws, r, 5, x.year || '', { size: 10 }); put(ws, r, 6, x.notes || '', { size: 10, color: T.gray });
+    bTotal += num(x.price); r++;
+  });
+  if (secB.length) { put(ws, r, 1, secB.length + ' closings', { bold: true, top: true }); put(ws, r, 3, bTotal, { fmt: MONEY, align: 'right', bold: true, top: true }); r++; }
+  r++;
+  band(ws, r, 1, 9, 'SECTION C — GROUND-UP CONSTRUCTION TRACK RECORD'); r++;
+  ['Project', 'Scope', 'Start', 'Completion', 'Budget', 'Actual', 'Sale', 'Months', 'Lender']
+    .forEach(function (t, i) { put(ws, r, i + 1, t, { bold: true, color: T.navy, fill: T.ltblue, align: i >= 4 && i <= 6 ? 'right' : 'left' }); });
+  r++;
+  const secC = reo.section_c || [];
+  secC.forEach(function (x) {
+    put(ws, r, 1, x.address || '', { size: 10 }); put(ws, r, 2, x.scope || '', { size: 10 }); put(ws, r, 3, x.start || '', { size: 10 });
+    put(ws, r, 4, x.completion || '', { size: 10 }); put(ws, r, 5, num(x.budget), { fmt: MONEY, align: 'right' });
+    put(ws, r, 6, num(x.actual), { fmt: MONEY, align: 'right' }); put(ws, r, 7, num(x.sale), { fmt: MONEY, align: 'right' });
+    put(ws, r, 8, x.months || '', { size: 10 }); put(ws, r, 9, x.lender || '', { size: 10 });
+    r++;
+  });
+  if (!secC.length) { ws.mergeCells(r, 1, r, 9); put(ws, r, 1, '(none — support with the GC portfolio, license and comps of similar scope)', { italic: true, color: T.gray }); r++; }
+}
+
+// ---- Document Tracker ------------------------------------------------------
+function sheetDocs(wb, p) {
+  const docs = Array.isArray(p.documents) ? p.documents : [];
+  const ws = wb.addWorksheet('Document Tracker', { views: [{ showGridLines: false }] });
+  ws.getColumn(1).width = 46; ws.getColumn(2).width = 18; ws.getColumn(3).width = 14; ws.getColumn(4).width = 14; ws.getColumn(5).width = 32;
+  titleBand(ws, 5, 'LENDER SUBMISSION TRACKER', 'Internal working document');
+  let r = 4;
+  ['Document', 'Responsible', 'Status', 'Date Sent', 'Notes']
+    .forEach(function (t, i) { put(ws, r, i + 1, t, { bold: true, color: T.white, fill: T.navy2 }); });
+  r++;
+  docs.forEach(function (d) {
+    put(ws, r, 1, d.name || '', { size: 10 });
+    put(ws, r, 2, d.responsible || '', { size: 10 });
+    put(ws, r, 3, d.status || '', { size: 10, color: d.status === 'Sent' ? T.green : (d.status === 'In progress' ? 'FFB8791F' : T.black) });
+    put(ws, r, 4, d.date_sent || '', { size: 10 });
+    put(ws, r, 5, d.notes || '', { size: 10, color: T.gray });
+    r++;
+  });
 }

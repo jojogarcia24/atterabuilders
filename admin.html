@@ -236,6 +236,9 @@
         [data-panel="loans"] .lp-check.bad{background:#fbece9}
         [data-panel="loans"] .lp-check.bad .dot{background:#c0402f}
         [data-panel="loans"] .lp-check .cv{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums}
+        [data-panel="loans"] .lp-subnav{display:flex;gap:.4rem;background:#eceae4;border-radius:8px;padding:3px;margin-bottom:1rem}
+        [data-panel="loans"] .lp-subnav button{flex:1;border:0;background:transparent;padding:.5em .6em;border-radius:6px;font:inherit;font-size:.8rem;cursor:pointer;color:var(--muted)}
+        [data-panel="loans"] .lp-subnav button.on{background:#fff;color:#111;box-shadow:0 1px 2px rgba(0,0,0,.08);font-weight:600}
         [data-panel="loans"] .lp-switch{display:inline-flex;background:#eceae4;border-radius:8px;padding:3px;margin-bottom:.9rem}
         [data-panel="loans"] .lp-switch button{border:0;background:transparent;padding:.4em .9em;border-radius:6px;font:inherit;font-size:.82rem;cursor:pointer;color:var(--muted)}
         [data-panel="loans"] .lp-switch button.on{background:#fff;color:#111;box-shadow:0 1px 2px rgba(0,0,0,.08);font-weight:600}
@@ -274,6 +277,12 @@
       </div>
       <div id="lp-editor">
         <div>
+          <div class="lp-subnav">
+            <button data-sec="deal" class="on">Deal &amp; Budget</button>
+            <button data-sec="reo">REO &amp; Track Record</button>
+            <button data-sec="docs">Documents</button>
+          </div>
+          <div id="lp-sec-deal">
           <div class="card" style="padding:1.2rem 1.3rem;margin-bottom:1.2rem">
             <h3 style="margin:0 0 .8rem">Project</h3>
             <div class="lp-grid" id="lp-prop"></div>
@@ -289,6 +298,33 @@
           <div class="card" style="padding:1.2rem 1.3rem">
             <div class="toolrow" style="margin-bottom:.6rem"><h3 style="margin:0">Construction budget</h3><button id="lp-addline" class="btn">Add line</button></div>
             <div class="tablescroll"><div id="lp-budget"></div></div>
+          </div>
+          </div><!-- /lp-sec-deal -->
+
+          <div id="lp-sec-reo" style="display:none">
+            <div class="card" style="padding:1.2rem 1.3rem;margin-bottom:1.2rem">
+              <h3 style="margin:0 0 .8rem">Guarantor</h3>
+              <div class="lp-grid"><label class="lp-f"><span>Guarantor name</span><input id="lp-reo-guarantor" type="text"></label></div>
+            </div>
+            <div class="card" style="padding:1.2rem 1.3rem;margin-bottom:1.2rem">
+              <div class="toolrow" style="margin-bottom:.6rem"><h3 style="margin:0">Section A — Real estate owned</h3><button class="btn" data-add="a">Add row</button></div>
+              <div class="tablescroll"><div id="lp-reo-a"></div></div>
+            </div>
+            <div class="card" style="padding:1.2rem 1.3rem;margin-bottom:1.2rem">
+              <div class="toolrow" style="margin-bottom:.6rem"><h3 style="margin:0">Section B — Closed transactions</h3><button class="btn" data-add="b">Add row</button></div>
+              <div class="tablescroll"><div id="lp-reo-b"></div></div>
+            </div>
+            <div class="card" style="padding:1.2rem 1.3rem">
+              <div class="toolrow" style="margin-bottom:.6rem"><h3 style="margin:0">Section C — Construction track record</h3><button class="btn" data-add="c">Add row</button></div>
+              <div class="tablescroll"><div id="lp-reo-c"></div></div>
+            </div>
+          </div>
+
+          <div id="lp-sec-docs" style="display:none">
+            <div class="card" style="padding:1.2rem 1.3rem">
+              <div class="toolrow" style="margin-bottom:.6rem"><h3 style="margin:0">Document tracker</h3><button id="lp-doc-add" class="btn">Add document</button></div>
+              <div class="tablescroll"><div id="lp-docs"></div></div>
+            </div>
           </div>
         </div>
         <div>
@@ -752,7 +788,22 @@
       rules: { max_ltc: 0.85, max_ltarv: 0.75, min_contingency: 0.05, min_margin: 0.15,
                min_equity: 0.15, max_cost_per_sf: 250, max_line_share: 0.15, max_dumpster: 20000 },
       capital: { num_partners: 2, capital_per_partner: 300000, ownership_per_capital: 0.125,
-                 operating_partners: 3, working_capital: 130000, hold_months: 10 }
+                 operating_partners: 3, working_capital: 130000, hold_months: 10 },
+      reo: { guarantor: '', section_a: [], section_b: [], section_c: [] },
+      documents: [
+        { name: 'Signed purchase contract', responsible: '', status: 'Not started' },
+        { name: 'Itemized construction budget', responsible: '', status: 'Not started' },
+        { name: 'Plans — floor plan with SF, bed/bath', responsible: '', status: 'Not started' },
+        { name: 'Survey', responsible: 'Title company', status: 'Not started' },
+        { name: 'Loan applications — members 20%+', responsible: '', status: 'Not started' },
+        { name: "Driver's license photos", responsible: '', status: 'Not started' },
+        { name: 'Entity docs — EIN, formation, operating agreement', responsible: 'Attorney', status: 'Not started' },
+        { name: 'REO schedule / track record', responsible: '', status: 'Not started' },
+        { name: 'Prior 2 months bank statements', responsible: '', status: 'Not started' },
+        { name: "Builder's risk insurance", responsible: '', status: 'Not started' },
+        { name: 'GC license & certificate of insurance', responsible: 'GC', status: 'Not started' },
+        { name: 'Appraisal', responsible: 'Lender', status: 'Not started' }
+      ]
     };
   }
 
@@ -1018,6 +1069,64 @@
       '<p style="font-size:11px;color:#666;margin-top:8px">Break-even sale ≈ $' + Math.round(c.breakEvenPsf) + '/SF; below that, partner capital is at risk. Operating partners contribute sweat equity; capital partners are passive. Review with a securities attorney before accepting capital.</p>';
   }
 
+  // ---- REO & Track Record + Document Tracker editors --------------------
+  var REO_A_COLS = [
+    { k: 'address', label: 'Address' }, { k: 'type', label: 'Type' }, { k: 'acquired', label: 'Acquired' },
+    { k: 'purchase', label: 'Purchase', type: 'money' }, { k: 'value', label: 'Market value', type: 'money' },
+    { k: 'loan', label: 'Loan balance', type: 'money' }, { k: 'lender', label: 'Lender' },
+    { k: 'payment', label: 'Monthly pmt', type: 'money' }, { k: 'rent', label: 'Monthly rent', type: 'money' }
+  ];
+  var REO_B_COLS = [
+    { k: 'address', label: 'Address' }, { k: 'role', label: 'Role' },
+    { k: 'price', label: 'Sale price', type: 'money' }, { k: 'close_date', label: 'Close date' },
+    { k: 'year', label: 'Year' }, { k: 'notes', label: 'Notes' }
+  ];
+  var REO_C_COLS = [
+    { k: 'address', label: 'Project' }, { k: 'scope', label: 'Scope' }, { k: 'start', label: 'Start' },
+    { k: 'completion', label: 'Completion' }, { k: 'budget', label: 'Budget', type: 'money' },
+    { k: 'actual', label: 'Actual cost', type: 'money' }, { k: 'sale', label: 'Sale price', type: 'money' },
+    { k: 'months', label: 'Months' }, { k: 'lender', label: 'Lender' }
+  ];
+  var DOC_COLS = [
+    { k: 'name', label: 'Document' }, { k: 'responsible', label: 'Responsible' },
+    { k: 'status', label: 'Status', type: 'select', opts: ['Not started', 'In progress', 'Sent', 'N/A'] },
+    { k: 'date_sent', label: 'Date sent' }, { k: 'notes', label: 'Notes' }
+  ];
+
+  function lpArr(path) {
+    if (path === 'documents') return current.project.documents || (current.project.documents = []);
+    var reo = current.project.reo || (current.project.reo = { guarantor: '', section_a: [], section_b: [], section_c: [] });
+    return reo[path] || (reo[path] = []);
+  }
+  function lpGridRender(elId, path, cols) {
+    var arr = lpArr(path);
+    var head = '<tr>' + cols.map(function (c) { return '<th>' + esc(c.label) + '</th>'; }).join('') + '<th></th></tr>';
+    var bodyRows = arr.map(function (row, i) {
+      return '<tr>' + cols.map(function (c) {
+        if (c.type === 'select') {
+          return '<td><select data-gp="' + path + '" data-gi="' + i + '" data-gk="' + c.k + '">' +
+            c.opts.map(function (op) { return '<option' + (row[c.k] === op ? ' selected' : '') + '>' + op + '</option>'; }).join('') + '</select></td>';
+        }
+        var t = c.type === 'money' ? 'number' : 'text';
+        var w = c.type === 'money' ? 92 : (c.k === 'address' || c.k === 'name' || c.k === 'notes' ? 150 : 110);
+        return '<td><input type="' + t + '" data-gp="' + path + '" data-gi="' + i + '" data-gk="' + c.k + '" value="' + esc(row[c.k] == null ? '' : row[c.k]) + '" style="width:' + w + 'px"></td>';
+      }).join('') + '<td><button class="btn" data-grm="' + path + '" data-gi="' + i + '" style="padding:.2em .5em">✕</button></td></tr>';
+    }).join('');
+    document.getElementById(elId).innerHTML = '<table class="lp-bt"><thead>' + head + '</thead><tbody>' + bodyRows + '</tbody></table>';
+  }
+  function lpRenderReo() {
+    var reo = current.project.reo || (current.project.reo = { guarantor: '', section_a: [], section_b: [], section_c: [] });
+    var g = $('#lp-reo-guarantor'); if (g) g.value = reo.guarantor || '';
+    lpGridRender('lp-reo-a', 'section_a', REO_A_COLS);
+    lpGridRender('lp-reo-b', 'section_b', REO_B_COLS);
+    lpGridRender('lp-reo-c', 'section_c', REO_C_COLS);
+  }
+  function lpRenderDocs() { lpGridRender('lp-docs', 'documents', DOC_COLS); }
+  function lpShowSection(sec) {
+    ['deal', 'reo', 'docs'].forEach(function (s) { var el = $('#lp-sec-' + s); if (el) el.style.display = (s === sec) ? '' : 'none'; });
+    document.querySelectorAll('.lp-subnav button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-sec') === sec); });
+  }
+
   function lpRecompute() {
     if (!current || !current.project || !window.LoanCalc) return;
     var o = window.LoanCalc.compute(current.project, current.lines);
@@ -1036,6 +1145,9 @@
       LP_RULES.map(function (f) { return lpField(f, (p.rules || {})[f.k]); }).join('');
     $('#lp-cap').innerHTML = LP_CAP.map(function (f) { return lpField(f, (p.capital || {})[f.k]); }).join('');
     lpRenderBudget();
+    lpRenderReo();
+    lpRenderDocs();
+    lpShowSection('deal');
     lpRecompute();
     $('#lp-editor').style.display = 'grid';
   }
@@ -1053,6 +1165,11 @@
     if (el.hasAttribute('data-k')) { current.project[el.getAttribute('data-k')] = lpConv(el); current.dirty = true; lpRecompute(); }
     else if (el.hasAttribute('data-rk')) { (current.project.rules = current.project.rules || {})[el.getAttribute('data-rk')] = lpConv(el); current.dirty = true; lpRecompute(); }
     else if (el.hasAttribute('data-ck')) { (current.project.capital = current.project.capital || {})[el.getAttribute('data-ck')] = lpConv(el); current.dirty = true; lpRecompute(); }
+    else if (el.id === 'lp-reo-guarantor') { (current.project.reo = current.project.reo || {}).guarantor = el.value; current.dirty = true; }
+    else if (el.hasAttribute('data-gp')) {
+      var arr = lpArr(el.getAttribute('data-gp')); var gi = +el.getAttribute('data-gi'); var gk = el.getAttribute('data-gk');
+      if (arr[gi]) { arr[gi][gk] = el.type === 'number' ? lnum(el.value) : el.value; current.dirty = true; }
+    }
     else if (el.hasAttribute('data-line')) {
       var ln = current.lines[+el.getAttribute('data-line')]; if (!ln) return;
       var c = el.getAttribute('data-col');
@@ -1065,7 +1182,7 @@
     var keys = ['name', 'status', 'address', 'borrower', 'scope', 'square_footage', 'stories',
       'beds_baths', 'lot_size', 'term_months', 'start_date', 'completion_date', 'purchase_price',
       'closing_costs', 'arv_per_sf', 'interest_rate', 'points_pct', 'admin_fee', 'contingency_rate',
-      'selling_cost_pct', 'escrow_interest', 'rules', 'capital', 'notes'];
+      'selling_cost_pct', 'escrow_interest', 'rules', 'capital', 'documents', 'reo', 'notes'];
     var o = {};
     keys.forEach(function (k) { if (p[k] !== undefined) o[k] = p[k]; });
     ['square_footage', 'stories', 'term_months', 'purchase_price', 'closing_costs', 'arv_per_sf',
@@ -1087,6 +1204,9 @@
       var p = (res[0] || [])[0];
       if (!p) { note($('#lp-note'), 'Not found.', 'err'); return; }
       if (!p.rules) p.rules = lpDefault().rules;
+      if (!p.capital) p.capital = lpDefault().capital;
+      if (!p.reo) p.reo = { guarantor: '', section_a: [], section_b: [], section_c: [] };
+      if (!p.documents) p.documents = [];
       current = { isNew: false, dirty: false, project: p, lines: res[1] || [] };
       lpRenderEditor(); note($('#lp-note'), '', '');
     }).catch(function () { note($('#lp-note'), 'Could not load project.', 'err'); });
@@ -1199,6 +1319,17 @@
     var b = e.target.closest ? e.target.closest('[data-view]') : null;
     if (!b || !current) return;
     current.view = b.getAttribute('data-view'); lpRecompute();
+  });
+  $('#lp-editor').addEventListener('click', function (e) {
+    if (!current) return;
+    var t = e.target;
+    var sec = t.closest ? t.closest('[data-sec]') : null;
+    if (sec) { lpShowSection(sec.getAttribute('data-sec')); return; }
+    if (t.id === 'lp-doc-add') { (current.project.documents = current.project.documents || []).push({ status: 'Not started' }); lpRenderDocs(); current.dirty = true; return; }
+    var add = t.closest ? t.closest('[data-add]') : null;
+    if (add) { var m = { a: 'section_a', b: 'section_b', c: 'section_c' }[add.getAttribute('data-add')]; if (m) { lpArr(m).push({}); lpRenderReo(); current.dirty = true; } return; }
+    var grm = t.closest ? t.closest('[data-grm]') : null;
+    if (grm) { var pth = grm.getAttribute('data-grm'); lpArr(pth).splice(+grm.getAttribute('data-gi'), 1); if (pth === 'documents') lpRenderDocs(); else lpRenderReo(); current.dirty = true; return; }
   });
   $('#lp-budget').addEventListener('click', function (e) {
     var b = e.target.closest ? e.target.closest('[data-rm]') : null;
