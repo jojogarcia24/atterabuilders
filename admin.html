@@ -213,7 +213,30 @@
         [data-panel="loans"] .lp-chip span{color:var(--muted)}
         [data-panel="loans"] #lp-editor{display:none;gap:1.2rem;grid-template-columns:1fr 1fr}
         [data-panel="loans"] #lp-results-card{position:sticky;top:1rem}
-        @media(max-width:900px){[data-panel="loans"] #lp-editor{grid-template-columns:1fr}[data-panel="loans"] .lp-cols,[data-panel="loans"] .lp-grid{grid-template-columns:1fr}}
+        [data-panel="loans"] .lp-kpis{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin-bottom:.2rem}
+        [data-panel="loans"] .lp-kpi{border:1px solid var(--line,#e7e7e2);border-radius:10px;padding:.65rem .75rem;background:#fff}
+        [data-panel="loans"] .lp-kpi .k{font-size:.66rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+        [data-panel="loans"] .lp-kpi .v{font-size:1.22rem;font-weight:700;margin-top:.12rem;line-height:1.12;font-variant-numeric:tabular-nums}
+        [data-panel="loans"] .lp-kpi .s{font-size:.72rem;color:var(--muted);margin-top:.1rem}
+        [data-panel="loans"] .lp-kpi.good{border-color:#bfe0c6;background:#f4faf5}
+        [data-panel="loans"] .lp-kpi.good .v{color:#1c6b2c}
+        [data-panel="loans"] .lp-sec{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;margin:1.05rem 0 .5rem}
+        [data-panel="loans"] .lp-gauge{margin:.5rem 0}
+        [data-panel="loans"] .lp-gauge .gl{display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.28rem}
+        [data-panel="loans"] .lp-gauge .gt{height:9px;border-radius:6px;background:#eceae4;overflow:hidden}
+        [data-panel="loans"] .lp-gauge .gf{height:100%;border-radius:6px}
+        [data-panel="loans"] .lp-draw-row{display:grid;grid-template-columns:56px 1fr 104px;gap:.55rem;align-items:center;font-size:.8rem;margin:.34rem 0}
+        [data-panel="loans"] .lp-draw-row .bar{height:10px;background:#eceae4;border-radius:6px;overflow:hidden}
+        [data-panel="loans"] .lp-draw-row .bar i{display:block;height:100%;background:#3f6f52;border-radius:6px}
+        [data-panel="loans"] .lp-draw-row .amt{text-align:right;font-variant-numeric:tabular-nums;line-height:1.15}
+        [data-panel="loans"] .lp-checks{display:grid;grid-template-columns:1fr;gap:.32rem}
+        [data-panel="loans"] .lp-check{display:flex;align-items:center;gap:.5rem;font-size:.8rem;padding:.36em .55em;border-radius:8px;background:#f6f6f3}
+        [data-panel="loans"] .lp-check .dot{width:16px;height:16px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:.62rem;color:#fff;font-weight:700}
+        [data-panel="loans"] .lp-check.ok .dot{background:#1c6b2c}
+        [data-panel="loans"] .lp-check.bad{background:#fbece9}
+        [data-panel="loans"] .lp-check.bad .dot{background:#c0402f}
+        [data-panel="loans"] .lp-check .cv{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums}
+        @media(max-width:900px){[data-panel="loans"] #lp-editor{grid-template-columns:1fr}[data-panel="loans"] .lp-cols,[data-panel="loans"] .lp-grid,[data-panel="loans"] .lp-kpis{grid-template-columns:1fr}}
       </style>
       <div class="toolrow">
         <h2>Loan Packages</h2>
@@ -733,42 +756,66 @@
 
   function lpMrow(label, val, cls) { return '<div class="lp-m' + (cls ? ' ' + cls : '') + '"><span>' + label + '</span><b>' + val + '</b></div>'; }
 
+  function lpKpi(k, v, s, cls) {
+    return '<div class="lp-kpi' + (cls ? ' ' + cls : '') + '"><div class="k">' + k + '</div>' +
+      '<div class="v">' + v + '</div>' + (s ? '<div class="s">' + s + '</div>' : '') + '</div>';
+  }
+  function lpGauge(label, val, cap, pass) {
+    var frac = cap > 0 ? Math.min(1, val / cap) : 0;
+    return '<div class="lp-gauge"><div class="gl"><span>' + label + '</span>' +
+      '<b>' + pct(val) + ' <span style="color:var(--muted);font-weight:400">/ ' + pct(cap, 0) + ' cap</span></b></div>' +
+      '<div class="gt"><i class="gf" style="width:' + (frac * 100).toFixed(1) + '%;background:' + (pass ? '#3f6f52' : '#c0402f') + '"></i></div></div>';
+  }
   function lpRenderResults(o) {
-    var chips = o.rules.map(function (r) {
-      var v = (r.key === 'dumpster' || r.key === 'costSf' || r.key === 'draws') ? money(r.value) : pct(r.value);
-      return '<div class="lp-chip ' + (r.pass ? 'ok' : 'bad') + '"><b>' + (r.pass ? 'PASS' : 'REVIEW') + '</b>' + esc(r.label) + ' <span>(' + v + ')</span></div>';
-    }).join('');
+    var maxDraw = Math.max.apply(null, o.draws.map(function (d) { return d.amount; }).concat([1]));
     var draws = o.draws.map(function (d) {
-      return '<tr><td>Draw ' + d.n + '</td><td style="text-align:right">' + money(d.amount) + '</td><td style="text-align:right">' + pct(d.cumPct) + '</td></tr>';
+      return '<div class="lp-draw-row"><span>Draw ' + d.n + '</span>' +
+        '<div class="bar"><i style="width:' + (d.amount / maxDraw * 100).toFixed(1) + '%"></i></div>' +
+        '<span class="amt">' + money(d.amount) + '<br><span style="color:var(--muted);font-size:.72rem">' + pct(d.cumPct) + ' cum</span></span></div>';
+    }).join('');
+    var checks = o.rules.map(function (r) {
+      var v = (r.key === 'dumpster' || r.key === 'costSf' || r.key === 'draws') ? money(r.value) : pct(r.value);
+      return '<div class="lp-check ' + (r.pass ? 'ok' : 'bad') + '"><span class="dot">' + (r.pass ? '✓' : '!') + '</span>' +
+        esc(r.label) + '<span class="cv">' + v + '</span></div>';
     }).join('');
     var bal = Math.abs(o.balance) < 1;
     var h = '';
     h += '<div class="lp-head"><h3 style="margin:0">Underwriting</h3><span class="pill ' + (o.rulesPass === o.rulesTotal ? 'new' : 'contacted') + '">' + o.rulesPass + '/' + o.rulesTotal + ' checks</span></div>';
-    h += '<div class="lp-cols"><div>' +
-      lpMrow('Total loan', money(o.totalLoan)) +
-      lpMrow('&nbsp;&nbsp;Acquisition advance', money(o.acqAdvance)) +
-      lpMrow('&nbsp;&nbsp;Construction holdback', money(o.holdback)) +
-      lpMrow('Loan-to-Cost', pct(o.LTC), o.rules[3].pass ? '' : 'bad') +
-      lpMrow('Loan-to-ARV', pct(o.LTARV), o.rules[4].pass ? '' : 'bad') +
-      lpMrow('Total project cost', money(o.totalCost)) +
-      lpMrow('Borrower equity', money(o.equity) + ' · ' + pct(o.equityPct)) +
-      '</div><div>' +
-      lpMrow('ARV', money(o.ARV) + ' · $' + Math.round(o.arvPerSf) + '/SF') +
-      lpMrow('Gross profit', money(o.grossProfit) + ' · ' + pct(o.grossMargin)) +
-      lpMrow('Net profit (sale)', money(o.netProfit) + ' · ' + pct(o.netMargin)) +
-      lpMrow('Cash-on-cash', pct(o.cashOnCash)) +
-      lpMrow('Cost / SF (hard)', money(o.costPerSf)) +
-      lpMrow('Break-even sale', money(o.breakEven)) +
-      lpMrow('Overrun cushion', pct(o.overrunCushion)) +
-      '</div></div>';
-    h += '<div class="lp-cols" style="margin-top:.4rem"><div>' +
-      lpMrow('Down payment', money(o.downPayment)) +
-      lpMrow('Cash to close', money(o.cashToClose)) +
-      lpMrow('+ interest (monthly)', money(o.interestReserve)) +
-      lpMrow('Total cash in deal', money(o.totalCashIn), 'strong') +
-      '</div><div><table class="lp-dt"><thead><tr><th>Draw</th><th style="text-align:right">Amount</th><th style="text-align:right">Cum&nbsp;%</th></tr></thead><tbody>' + draws + '</tbody></table></div></div>';
-    h += '<div class="lp-bal ' + (bal ? 'ok' : 'bad') + '">' + (bal ? '✓ Sources balance to uses' : '✗ Out of balance: ' + money(o.balance)) + ' · binding: ' + esc(o.binding) + '</div>';
-    h += '<div class="lp-chips">' + chips + '</div>';
+    // headline KPIs
+    h += '<div class="lp-kpis">' +
+      lpKpi('Total loan', money(o.totalLoan), pct(o.LTC) + ' LTC · ' + pct(o.LTARV) + ' LTARV') +
+      lpKpi('Net profit at sale', money(o.netProfit), pct(o.netMargin) + ' net margin', 'good') +
+      lpKpi('Borrower equity', money(o.equity), pct(o.equityPct) + ' of total cost') +
+      lpKpi('Cash to close', money(o.cashToClose), '+ ' + money(o.interestReserve) + ' interest, monthly') +
+      '</div>';
+    // leverage gauges
+    h += '<div class="lp-sec">Leverage vs. lender caps</div>';
+    h += lpGauge('Loan-to-Cost', o.LTC, o.rules[3].threshold, o.rules[3].pass);
+    h += lpGauge('Loan-to-ARV', o.LTARV, o.rules[4].threshold, o.rules[4].pass);
+    // returns & value
+    h += '<div class="lp-sec">Returns &amp; value</div>';
+    h += '<div class="lp-kpis">' +
+      lpKpi('ARV', money(o.ARV), '$' + Math.round(o.arvPerSf) + ' / SF') +
+      lpKpi('Gross profit', money(o.grossProfit), pct(o.grossMargin) + ' of ARV') +
+      lpKpi('Cash-on-cash', pct(o.cashOnCash), 'on borrower equity') +
+      lpKpi('Overrun cushion', pct(o.overrunCushion), 'slack before $0 profit') +
+      lpKpi('Break-even sale', money(o.breakEven), 'covers all-in cost') +
+      lpKpi('Hard cost / SF', money(o.costPerSf), 'of ' + money(o.hardCost) + ' hard cost') +
+      '</div>';
+    // sources & uses
+    h += '<div class="lp-sec">Sources &amp; uses</div>';
+    h += '<div class="lp-kpis">' +
+      lpKpi('Total project cost', money(o.totalCost), 'all-in') +
+      lpKpi('Acquisition advance', money(o.acqAdvance), 'funds at closing') +
+      lpKpi('Construction holdback', money(o.holdback), 'drawn over the build') +
+      lpKpi('Down payment', money(o.downPayment), 'borrower at closing') +
+      '</div>';
+    // draw schedule bar chart
+    h += '<div class="lp-sec">Draw schedule</div><div class="lp-draws">' + draws + '</div>';
+    // balance ribbon
+    h += '<div class="lp-bal ' + (bal ? 'ok' : 'bad') + '">' + (bal ? '✓ Sources balance to uses' : '✗ Out of balance: ' + money(o.balance)) + ' · binding constraint: ' + esc(o.binding) + '</div>';
+    // checks
+    h += '<div class="lp-sec">Underwriting checks</div><div class="lp-checks">' + checks + '</div>';
     $('#lp-results').innerHTML = h;
   }
 
