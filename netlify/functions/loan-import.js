@@ -138,21 +138,27 @@ function parseWorkbook(wb) {
 }
 
 function extractBudget(wb) {
-  let best = null, bestScore = -1;
-  wb.eachSheet(function (ws) {
+  // Prefer sheets explicitly named like a budget; otherwise consider all.
+  let pool = wb.worksheets.filter(function (ws) { return /budget/i.test(ws.name); });
+  if (!pool.length) pool = wb.worksheets;
+  let best = null, bestScore = -Infinity;
+  pool.forEach(function (ws) {
     const rows = ws.getSheetValues();
-    let score = 0;
+    let lineRows = 0, divRows = 0;
     for (let r = 1; r < rows.length; r++) {
       const row = rows[r]; if (!row) continue;
-      let hasText = false, hasBig = false;
+      let label = '', hasBig = false;
       for (let c = 1; c < row.length; c++) {
-        const t = cellText(row[c]);
-        if (t && isNaN(parseFloat(t))) hasText = true;
+        const t = cellText(row[c]).trim();
+        if (label === '' && t && /[a-zA-Z]/.test(t)) label = t;
         const n = cellNum(row[c]); if (n != null && n >= 100) hasBig = true;
       }
-      if (hasText && hasBig) score++;
+      if (!label) continue;
+      if (/^\s*\d{1,2}\s*[—\-–:.)]/.test(label) && !hasBig) divRows++;              // "10 — SOFT COSTS"
+      else if (hasBig && !/[•·]/.test(label) && label.length <= 80) lineRows++;
     }
-    if (/budget/i.test(ws.name)) score += 20;
+    // trade-division headers are the strongest budget signal; a name match is decisive
+    const score = divRows * 15 + lineRows + (/budget/i.test(ws.name) ? 50 : 0);
     if (score > bestScore) { bestScore = score; best = ws; }
   });
   if (!best) return [];
