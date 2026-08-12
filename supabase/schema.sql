@@ -396,6 +396,10 @@ create table if not exists public.projects (
     "num_partners": 2, "capital_per_partner": 300000, "ownership_per_capital": 0.125,
     "operating_partners": 3, "working_capital": 130000, "hold_months": 10
   }'::jsonb,
+  -- lender submission tracker: [{ name, responsible, status, date_sent, notes }]
+  documents        jsonb not null default '[]'::jsonb,
+  -- schedule of real estate owned & track record
+  reo              jsonb not null default '{"guarantor":"","section_a":[],"section_b":[],"section_c":[]}'::jsonb,
   notes            text
 );
 create index if not exists projects_created_idx on public.projects(created_at desc);
