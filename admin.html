@@ -263,6 +263,8 @@
       <div class="card" style="padding:1rem 1.2rem;margin-bottom:1.2rem;display:flex;gap:.7rem;align-items:center;flex-wrap:wrap">
         <select id="lp-picker" style="min-width:260px;padding:.5em;border:1px solid var(--line,#dcdcd6);border-radius:6px;font:inherit"></select>
         <button id="lp-new" class="btn">New project</button>
+        <button id="lp-import" class="btn">Import workbook</button>
+        <input type="file" id="lp-file" accept=".xlsx,.xls" style="display:none">
         <button id="lp-dup" class="btn">Duplicate</button>
         <button id="lp-save" class="ghost solid">Save</button>
         <select id="lp-print" title="Print / PDF" style="padding:.5em;border:1px solid var(--line,#dcdcd6);border-radius:6px;font:inherit">
@@ -1301,9 +1303,41 @@
       .finally(function () { btn.disabled = false; });
   }
 
+  function lpImport() {
+    if (!current) { /* allow import even with nothing selected */ }
+    $('#lp-file').click();
+  }
+  function lpImportFile() {
+    var input = $('#lp-file');
+    var f = input.files && input.files[0];
+    input.value = '';
+    if (!f) return;
+    note($('#lp-note'), 'Reading ' + f.name + '…');
+    var reader = new FileReader();
+    reader.onload = function () {
+      var b64 = String(reader.result).split(',')[1];
+      note($('#lp-note'), 'Importing ' + f.name + ' — parsing the workbook…');
+      fetch(FN + 'loan-import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (session && session.access_token) },
+        body: JSON.stringify({ filename: f.name, data: b64 })
+      }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (res) {
+          if (!res.ok) throw new Error(res.j.error || 'import failed');
+          note($('#lp-note'), 'Imported ' + (res.j.count || 0) + ' budget lines' + (res.j.source === 'ai' ? ' (AI-assisted)' : '') + ' — loaded below, review and Save.', 'ok');
+          current = null;
+          loadProjects(res.j.project_id);
+        }).catch(function (e) { note($('#lp-note'), 'Could not import: ' + e.message, 'err'); });
+    };
+    reader.onerror = function () { note($('#lp-note'), 'Could not read the file.', 'err'); };
+    reader.readAsDataURL(f);
+  }
+
   // wire the loan-package controls once
   $('#lp-picker').addEventListener('change', function () { lpSelect(this.value); });
   $('#lp-xls').addEventListener('click', lpExport);
+  $('#lp-import').addEventListener('click', lpImport);
+  $('#lp-file').addEventListener('change', lpImportFile);
   $('#lp-new').addEventListener('click', lpNew);
   $('#lp-dup').addEventListener('click', lpDuplicate);
   $('#lp-save').addEventListener('click', lpSave);
