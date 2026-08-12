@@ -204,4 +204,5 @@
   }
 
   root.LoanCalc = { compute: compute, capital: capital };
+  if (typeof module !== 'undefined' && module.exports) module.exports = { compute: compute, capital: capital };
 })(typeof window !== 'undefined' ? window : this);
