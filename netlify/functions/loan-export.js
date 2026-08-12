@@ -2,7 +2,8 @@
 // loan-export.js — generate a formatted .xlsx construction-loan package from a
 // project. Reads the project + budget lines from Supabase using the CALLER's
 // bearer token (so row-level security enforces admin-only access), runs the
-// shared LoanCalc engine, and returns a multi-tab workbook.
+// shared LoanCalc engine, and returns a multi-tab workbook styled to match the
+// Aterra "Construction Loan Package" workbook.
 // ============================================================================
 const ExcelJS = require('exceljs');
 const LoanCalc = require('../../loan-calc.js');
@@ -11,8 +12,14 @@ const SB = process.env.SUPABASE_URL;
 const ANON = process.env.SUPABASE_ANON_KEY;
 
 const FONT = 'Arial';
-const MONEY = '$#,##0';
-const MONEY2 = '$#,##0.00';
+// palette lifted from the source workbook
+const T = {
+  navy: 'FF1F3864', navy2: 'FF2F4A6D', ltblue: 'FFDCE6F1', sub: 'FFEDF1F7',
+  faint: 'FFF2F5F9', yellow: 'FFFFF2CC', blue: 'FF0000FF', gray: 'FF808080',
+  white: 'FFFFFFFF', black: 'FF000000', green: 'FF1C6B2C', red: 'FFC0402F'
+};
+const MONEY = '$#,##0;("$"#,##0);-';
+const MONEY2 = '$#,##0.00;("$"#,##0.00);-';
 const PCT = '0.0%';
 
 function json(code, obj) {
@@ -63,198 +70,334 @@ exports.handler = async function (event) {
 exports.buildWorkbook = buildWorkbook;
 
 // ---------------------------------------------------------------------------
+// styling helpers
+// ---------------------------------------------------------------------------
+function solid(argb) { return { type: 'pattern', pattern: 'solid', fgColor: { argb: argb } }; }
+
+function put(ws, r, c, v, o) {
+  o = o || {};
+  const cell = ws.getCell(r, c);
+  cell.value = (v === undefined ? null : v);
+  cell.font = { name: FONT, size: o.size || 10, bold: !!o.bold, italic: !!o.italic, color: { argb: o.color || T.black } };
+  if (o.fill) cell.fill = solid(o.fill);
+  if (o.fmt) cell.numFmt = o.fmt;
+  cell.alignment = { horizontal: o.align || 'left', vertical: 'middle', wrapText: !!o.wrap };
+  if (o.top) cell.border = { top: { style: 'thin', color: { argb: 'FF9AA6B2' } } };
+  return cell;
+}
+
+function band(ws, r, c1, c2, text, o) {
+  o = o || {};
+  ws.mergeCells(r, c1, r, c2);
+  put(ws, r, c1, text, { size: o.size || 13, bold: o.bold !== false, color: o.color || T.white, fill: o.fill || T.navy2 });
+  ws.getRow(r).height = o.height || 19;
+}
+
+function titleBand(ws, lastCol, titleText, subtitle) {
+  ws.mergeCells(1, 1, 1, lastCol);
+  put(ws, 1, 1, titleText, { size: 16, bold: true, color: T.white, fill: T.navy });
+  ws.getRow(1).height = 26;
+  ws.mergeCells(2, 1, 2, lastCol);
+  put(ws, 2, 1, subtitle, { size: 11, color: T.white, fill: T.navy2 });
+  ws.getRow(2).height = 18;
+}
+
+// label in col `lc`, value in col `vc`
+function kv(ws, r, lc, label, vc, value, fmt, o) {
+  o = o || {};
+  put(ws, r, lc, label, { size: 10, bold: !!o.bold, color: o.lcolor });
+  put(ws, r, vc, value, { size: 10, bold: !!o.bold, fmt: fmt, align: 'right', fill: o.vfill, color: o.vcolor, top: o.top });
+  if (o.top) ws.getCell(r, lc).border = { top: { style: 'thin', color: { argb: 'FF9AA6B2' } } };
+}
+
+// highlight a value cell like a source-workbook input (blue text on yellow)
+function inputV(ws, r, vc) {
+  const cell = ws.getCell(r, vc);
+  cell.fill = solid(T.yellow);
+  cell.font = { name: FONT, size: 10, color: { argb: T.blue } };
+}
+
+// ---------------------------------------------------------------------------
 function buildWorkbook(p, lines, o, cap) {
   const wb = new ExcelJS.Workbook();
   wb.creator = 'Aterra Builders';
-  sheetLender(wb, p, o);
+  sheetLenderPackage(wb, p, o);
+  sheetLoanSummary(wb, p, o);
   sheetBudget(wb, p, lines, o);
   sheetDraws(wb, o);
+  sheetRules(wb, o);
   sheetCapital(wb, p, o, cap);
-  sheetChecks(wb, o);
   return wb;
 }
 
-function title(ws, docLabel, p) {
-  ws.mergeCells('A1:D1');
-  const t = ws.getCell('A1');
-  t.value = 'ATERRA BUILDERS';
-  t.font = { name: FONT, size: 16, bold: true };
-  ws.mergeCells('A2:D2');
-  const d = ws.getCell('A2');
-  d.value = docLabel;
-  d.font = { name: FONT, size: 10, color: { argb: 'FF666666' } };
-  ws.mergeCells('A3:D3');
-  const s = ws.getCell('A3');
-  s.value = (p.address || p.name || '') + (p.square_footage ? '  •  ' + Number(p.square_footage).toLocaleString() + ' SF' : '') + (p.beds_baths ? '  •  ' + p.beds_baths : '');
-  s.font = { name: FONT, size: 10, color: { argb: 'FF444444' } };
+function subLine(p) {
+  return (p.scope || '') + (p.square_footage ? '  •  ' + Number(p.square_footage).toLocaleString() + ' SF' : '') + (p.beds_baths ? '  •  ' + p.beds_baths : '');
 }
 
-function sectionHeader(ws, row, text) {
-  ws.mergeCells('A' + row + ':D' + row);
-  const c = ws.getCell('A' + row);
-  c.value = text;
-  c.font = { name: FONT, size: 11, bold: true };
-  c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0EFEA' } };
-  ws.getRow(row).height = 18;
+// ---- Lender Package (one-pager) -------------------------------------------
+function sheetLenderPackage(wb, p, o) {
+  const ws = wb.addWorksheet('Lender Package', { views: [{ showGridLines: false }] });
+  ws.getColumn(1).width = 3; ws.getColumn(2).width = 46; ws.getColumn(3).width = 20; ws.getColumn(4).width = 12;
+  titleBand(ws, 4, 'CONSTRUCTION LOAN REQUEST', 'Aterra Builders  •  ' + (p.address || ''));
+  let r = 4;
+  band(ws, r, 2, 4, 'PROPERTY & PROJECT'); r++;
+  kv(ws, r++, 2, 'Subject Property', 3, p.address || '');
+  kv(ws, r++, 2, 'Borrower / Builder', 3, p.borrower || '');
+  kv(ws, r++, 2, 'Scope of Work', 3, p.scope || '');
+  kv(ws, r++, 2, 'Completed Square Footage', 3, o.SF, '#,##0');
+  kv(ws, r++, 2, 'Bedrooms / Bathrooms', 3, p.beds_baths || '');
+  kv(ws, r++, 2, 'Construction Term', 3, (p.term_months || '') + ' months');
+  kv(ws, r++, 2, 'Estimated After Repair Value', 3, o.ARV, MONEY);
+  kv(ws, r++, 2, 'ARV per Square Foot', 3, o.arvPerSf, MONEY);
+  r++;
+  band(ws, r, 2, 4, 'LOAN REQUEST'); r++;
+  kv(ws, r++, 2, 'Purchase Price / As-Is Value', 3, p.purchase_price, MONEY);
+  kv(ws, r++, 2, 'Acquisition Advance Requested', 3, o.acqAdvance, MONEY);
+  kv(ws, r++, 2, 'Construction Holdback Requested', 3, o.holdback, MONEY);
+  kv(ws, r++, 2, 'TOTAL LOAN REQUESTED', 3, o.totalLoan, MONEY, { bold: true, top: true });
+  kv(ws, r++, 2, 'Borrower Cash Equity', 3, o.equity, MONEY);
+  kv(ws, r++, 2, 'Borrower Equity as % of Total Cost', 3, o.equityPct, PCT);
+  kv(ws, r++, 2, 'Loan-to-Cost', 3, o.LTC, PCT);
+  kv(ws, r++, 2, 'Loan-to-ARV', 3, o.LTARV, PCT);
+  r++;
+  band(ws, r, 2, 4, 'CONSTRUCTION BUDGET BY DIVISION'); r++;
+  put(ws, r, 2, 'Division', { bold: true, fill: T.ltblue });
+  put(ws, r, 3, 'Amount', { bold: true, fill: T.ltblue, align: 'right' });
+  put(ws, r, 4, '% Budget', { bold: true, fill: T.ltblue, align: 'right' }); r++;
+  Object.keys(o.divisions).sort().forEach(function (d) {
+    put(ws, r, 2, d, { size: 10 });
+    put(ws, r, 3, o.divisions[d], { fmt: MONEY, align: 'right' });
+    put(ws, r, 4, o.hardCost ? o.divisions[d] / o.hardCost : 0, { fmt: PCT, align: 'right' });
+    r++;
+  });
+  kv(ws, r++, 2, 'Subtotal — Hard Construction Costs', 3, o.hardCost, MONEY, { bold: true, top: true });
+  kv(ws, r++, 2, 'Contingency', 3, o.contingency, MONEY);
+  kv(ws, r++, 2, 'TOTAL CONSTRUCTION BUDGET', 3, o.totalBudget, MONEY, { bold: true, top: true });
+  kv(ws, r++, 2, 'Cost per Square Foot', 3, o.costPerSf, MONEY2);
+  r++;
+  band(ws, r, 2, 4, 'DRAW SCHEDULE SUMMARY'); r++;
+  put(ws, r, 2, 'Draw', { bold: true, fill: T.ltblue });
+  put(ws, r, 3, 'Amount', { bold: true, fill: T.ltblue, align: 'right' });
+  put(ws, r, 4, 'Cum %', { bold: true, fill: T.ltblue, align: 'right' }); r++;
+  o.draws.forEach(function (d) {
+    put(ws, r, 2, 'Draw ' + d.n, { size: 10 });
+    put(ws, r, 3, d.amount, { fmt: MONEY, align: 'right' });
+    put(ws, r, 4, d.cumPct, { fmt: PCT, align: 'right' });
+    r++;
+  });
 }
 
-function kv(ws, row, label, value, fmt, opts) {
-  opts = opts || {};
-  const a = ws.getCell('A' + row); a.value = label; a.font = { name: FONT, size: 10, bold: !!opts.bold };
-  const b = ws.getCell('B' + row); b.value = value;
-  b.font = { name: FONT, size: 10, bold: !!opts.bold };
-  b.alignment = { horizontal: 'right' };
-  if (fmt) b.numFmt = fmt;
-  if (opts.top) { a.border = b.border = { top: { style: 'thin', color: { argb: 'FF333333' } } }; }
-  return row + 1;
+// ---- Loan Summary ----------------------------------------------------------
+function sheetLoanSummary(wb, p, o) {
+  const ws = wb.addWorksheet('Loan Summary', { views: [{ showGridLines: false }] });
+  ws.getColumn(1).width = 3; ws.getColumn(2).width = 52; ws.getColumn(3).width = 20; ws.getColumn(4).width = 3;
+  titleBand(ws, 4, 'ATERRA BUILDERS — CONSTRUCTION LOAN REQUEST', subLine(p));
+  let r = 4;
+  band(ws, r, 2, 3, 'PROJECT SNAPSHOT'); r++;
+  kv(ws, r++, 2, 'Borrower / Builder', 3, p.borrower || '');
+  kv(ws, r++, 2, 'Project Scope', 3, p.scope || '');
+  kv(ws, r++, 2, 'Completed Square Footage', 3, o.SF, '#,##0');
+  kv(ws, r++, 2, 'Bedrooms / Bathrooms', 3, p.beds_baths || '');
+  kv(ws, r++, 2, 'Construction Term (months)', 3, p.term_months || '');
+  r++;
+  band(ws, r, 2, 3, 'SOURCES AND USES OF FUNDS'); r++;
+  band(ws, r, 2, 3, 'USES OF FUNDS', { fill: T.ltblue, color: T.black }); r++;
+  kv(ws, r, 2, 'Land / Lot Acquisition Cost', 3, p.purchase_price, MONEY); inputV(ws, r, 3); r++;
+  kv(ws, r++, 2, 'Acquisition Closing Costs, Title & Survey', 3, p.closing_costs, MONEY);
+  kv(ws, r++, 2, 'Hard Construction Costs', 3, o.hardCost, MONEY);
+  kv(ws, r++, 2, 'Construction Contingency', 3, o.contingency, MONEY);
+  kv(ws, r++, 2, 'Interest Reserve (carry during construction)', 3, o.interestReserve, MONEY);
+  kv(ws, r++, 2, 'Lender Points, Origination & Closing Fees', 3, o.pointsFees, MONEY);
+  kv(ws, r++, 2, 'TOTAL PROJECT COST', 3, o.totalCost, MONEY, { bold: true, top: true });
+  r++;
+  band(ws, r, 2, 3, 'SOURCES OF FUNDS', { fill: T.ltblue, color: T.black }); r++;
+  kv(ws, r++, 2, 'Hard Money Loan — Acquisition Advance', 3, o.acqAdvance, MONEY);
+  kv(ws, r++, 2, 'Hard Money Loan — Construction Holdback', 3, o.holdback, MONEY);
+  kv(ws, r++, 2, 'Borrower Equity — Cash at Closing & carry', 3, o.equity, MONEY);
+  kv(ws, r++, 2, 'TOTAL SOURCES', 3, o.totalLoan + o.equity, MONEY, { bold: true, top: true });
+  kv(ws, r++, 2, 'Balance Check (Sources less Uses)', 3, o.balance, MONEY);
+  r++;
+  band(ws, r, 2, 3, 'KEY UNDERWRITING METRICS'); r++;
+  kv(ws, r++, 2, 'Hard Construction Cost per SF', 3, o.costPerSf, MONEY2);
+  kv(ws, r++, 2, 'All-In Project Cost per SF', 3, o.SF ? o.totalCost / o.SF : 0, MONEY2);
+  kv(ws, r, 2, 'After Repair Value (ARV)', 3, o.ARV, MONEY); inputV(ws, r, 3); r++;
+  kv(ws, r++, 2, 'ARV per SF', 3, o.arvPerSf, MONEY);
+  kv(ws, r++, 2, 'Total Loan Amount', 3, o.totalLoan, MONEY, { bold: true });
+  kv(ws, r++, 2, 'Loan-to-Cost (LTC)', 3, o.LTC, PCT);
+  kv(ws, r++, 2, 'Loan-to-ARV (LTARV)', 3, o.LTARV, PCT);
+  kv(ws, r++, 2, 'Total Borrower Equity', 3, o.equity, MONEY);
+  kv(ws, r++, 2, 'Borrower Equity as % of Cost', 3, o.equityPct, PCT);
+  kv(ws, r++, 2, 'Projected Gross Profit', 3, o.grossProfit, MONEY);
+  kv(ws, r++, 2, 'Projected Gross Margin on ARV', 3, o.grossMargin, PCT);
+  r++;
+  band(ws, r, 2, 3, 'FINANCING COST CALCULATOR'); r++;
+  kv(ws, r, 2, 'Interest rate (annual)', 3, p.interest_rate, PCT); inputV(ws, r, 3); r++;
+  kv(ws, r, 2, 'Term (months)', 3, p.term_months, '0'); inputV(ws, r, 3); r++;
+  kv(ws, r, 2, 'Lender points (% of loan)', 3, p.points_pct, PCT); inputV(ws, r, 3); r++;
+  kv(ws, r, 2, 'Admin / doc / processing fee', 3, p.admin_fee, MONEY); inputV(ws, r, 3); r++;
+  kv(ws, r++, 2, 'Average outstanding balance', 3, o.avgBalance, MONEY);
+  kv(ws, r++, 2, 'Interest reserve required', 3, o.interestReserve, MONEY);
+  kv(ws, r++, 2, 'Lender points and fees', 3, o.pointsFees, MONEY);
+  r++;
+  band(ws, r, 2, 3, 'CLOSING TABLE'); r++;
+  kv(ws, r++, 2, 'Purchase Price / As-Is Value', 3, p.purchase_price, MONEY);
+  kv(ws, r++, 2, 'Lender Acquisition Advance', 3, o.acqAdvance, MONEY);
+  kv(ws, r++, 2, 'Borrower Down Payment', 3, o.downPayment, MONEY, { bold: true });
+  kv(ws, r++, 2, 'Plus: Lender Points, Origination & Fees', 3, o.pointsFees, MONEY);
+  kv(ws, r++, 2, 'Plus: Title, Escrow, Survey & Prepaids', 3, p.closing_costs, MONEY);
+  kv(ws, r++, 2, 'Estimated Cash to Close', 3, o.cashToClose, MONEY, { bold: true, top: true });
+  kv(ws, r++, 2, 'Plus: Interest paid monthly over build', 3, o.interestReserve, MONEY);
+  kv(ws, r++, 2, 'Total Borrower Cash into the Deal', 3, o.totalCashIn, MONEY, { bold: true, top: true });
+  r++;
+  band(ws, r, 2, 3, 'EXIT MATH'); r++;
+  kv(ws, r, 2, 'Selling costs as % of ARV', 3, o.sellPct, PCT); inputV(ws, r, 3); r++;
+  kv(ws, r++, 2, 'Estimated selling costs', 3, o.sellingCosts, MONEY);
+  kv(ws, r++, 2, 'Net profit after sale', 3, o.netProfit, MONEY, { bold: true });
+  kv(ws, r++, 2, 'Net margin on ARV', 3, o.netMargin, PCT);
+  kv(ws, r++, 2, 'Cash-on-cash return on equity', 3, o.cashOnCash, PCT);
+  kv(ws, r++, 2, 'Break-even sale price', 3, o.breakEven, MONEY);
+  r++;
+  put(ws, r, 2, 'Legend:  yellow = input cell.  All other figures are calculated from the project data.', { size: 9, color: T.gray, italic: true });
 }
 
-function sheetLender(wb, p, o) {
-  const ws = wb.addWorksheet('Lender Summary', { views: [{ showGridLines: false }] });
-  ws.getColumn(1).width = 42; ws.getColumn(2).width = 20; ws.getColumn(3).width = 4; ws.getColumn(4).width = 18;
-  title(ws, 'Construction Loan Request', p);
-  let r = 5;
-  sectionHeader(ws, r, 'LOAN REQUEST'); r += 1;
-  r = kv(ws, r, 'Purchase / as-is value', o.totalCost != null ? p.purchase_price : 0, MONEY);
-  r = kv(ws, r, 'Acquisition advance', o.acqAdvance, MONEY);
-  r = kv(ws, r, 'Construction holdback', o.holdback, MONEY);
-  r = kv(ws, r, 'Total loan requested', o.totalLoan, MONEY, { bold: true, top: true });
-  r = kv(ws, r, 'Borrower equity', o.equity, MONEY);
-  r = kv(ws, r, 'Borrower equity % of cost', o.equityPct, PCT);
-  r += 1;
-  sectionHeader(ws, r, 'KEY METRICS'); r += 1;
-  r = kv(ws, r, 'Total project cost', o.totalCost, MONEY);
-  r = kv(ws, r, 'Loan-to-Cost (LTC)', o.LTC, PCT);
-  r = kv(ws, r, 'Loan-to-ARV (LTARV)', o.LTARV, PCT);
-  r = kv(ws, r, 'Estimated ARV', o.ARV, MONEY);
-  r = kv(ws, r, 'ARV per SF', o.arvPerSf, MONEY);
-  r = kv(ws, r, 'Gross profit', o.grossProfit, MONEY);
-  r = kv(ws, r, 'Gross margin on ARV', o.grossMargin, PCT);
-  r = kv(ws, r, 'Net profit after sale', o.netProfit, MONEY);
-  r = kv(ws, r, 'Net margin on ARV', o.netMargin, PCT);
-  r = kv(ws, r, 'Cash-on-cash return', o.cashOnCash, PCT);
-  r += 1;
-  sectionHeader(ws, r, 'FINANCING'); r += 1;
-  r = kv(ws, r, 'Interest reserve (paid monthly)', o.interestReserve, MONEY);
-  r = kv(ws, r, 'Lender points & fees', o.pointsFees, MONEY);
-  r = kv(ws, r, 'Cash to close', o.cashToClose, MONEY);
-  r = kv(ws, r, 'Total cash into the deal', o.totalCashIn, MONEY, { bold: true, top: true });
-}
-
+// ---- Construction Budget ---------------------------------------------------
 function sheetBudget(wb, p, lines, o) {
   const ws = wb.addWorksheet('Construction Budget', { views: [{ showGridLines: false }] });
-  ws.getColumn(1).width = 44; ws.getColumn(2).width = 18; ws.getColumn(3).width = 10; ws.getColumn(4).width = 14;
-  title(ws, 'Detailed Construction Budget', p);
-  let r = 5;
-  const hdr = ws.getRow(r);
-  hdr.values = ['Line item', 'Amount', 'Draw #', 'Division'];
-  hdr.font = { name: FONT, size: 10, bold: true };
-  hdr.eachCell(function (c) { c.border = { bottom: { style: 'thin', color: { argb: 'FF333333' } } }; });
-  r += 1;
+  ws.getColumn(1).width = 46; ws.getColumn(2).width = 16; ws.getColumn(3).width = 11; ws.getColumn(4).width = 11; ws.getColumn(5).width = 8; ws.getColumn(6).width = 34;
+  titleBand(ws, 6, 'DETAILED CONSTRUCTION BUDGET — BY TRADE DIVISION', subLine(p));
+  let r = 4;
+  ['Line Item', 'Amount ($)', '% Budget', 'Cost / SF', 'Draw #', 'Scope Notes'].forEach(function (t, i) {
+    put(ws, r, i + 1, t, { bold: true, color: T.white, fill: T.navy2, align: i === 0 || i === 5 ? 'left' : 'right' });
+  });
+  r++;
   const byDiv = {};
   (lines || []).forEach(function (l) { const d = l.division || 'Other'; (byDiv[d] = byDiv[d] || []).push(l); });
   Object.keys(byDiv).sort().forEach(function (d) {
-    const dh = ws.getCell('A' + r); dh.value = d; dh.font = { name: FONT, size: 10, bold: true };
-    dh.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0EFEA' } };
-    r += 1;
+    ws.mergeCells(r, 1, r, 6);
+    put(ws, r, 1, d, { bold: true, color: T.navy, fill: T.ltblue }); r++;
     byDiv[d].forEach(function (l) {
-      ws.getCell('A' + r).value = l.line_item || '';
-      ws.getCell('A' + r).font = { name: FONT, size: 10 };
-      const b = ws.getCell('B' + r); b.value = Number(l.amount) || 0; b.numFmt = MONEY; b.font = { name: FONT, size: 10 }; b.alignment = { horizontal: 'right' };
-      const c = ws.getCell('C' + r); c.value = l.draw_number || ''; c.font = { name: FONT, size: 10 }; c.alignment = { horizontal: 'center' };
-      r += 1;
+      const amt = Number(l.amount) || 0;
+      put(ws, r, 1, l.line_item || '', { size: 10 });
+      put(ws, r, 2, amt, { fmt: MONEY, align: 'right' });
+      put(ws, r, 3, o.hardCost ? amt / o.hardCost : 0, { fmt: PCT, align: 'right', fill: T.faint });
+      put(ws, r, 4, o.SF ? amt / o.SF : 0, { fmt: MONEY2, align: 'right', fill: T.faint });
+      put(ws, r, 5, l.draw_number || '', { align: 'center' });
+      put(ws, r, 6, l.scope_notes || '', { size: 10, color: T.gray });
+      r++;
     });
-    const st = ws.getCell('A' + r); st.value = '   Subtotal'; st.font = { name: FONT, size: 10, italic: true };
-    const sb = ws.getCell('B' + r); sb.value = o.divisions[d] || 0; sb.numFmt = MONEY; sb.font = { name: FONT, size: 10, italic: true }; sb.alignment = { horizontal: 'right' };
-    r += 1;
+    put(ws, r, 1, '    Subtotal — ' + d, { bold: true, italic: true, fill: T.sub, color: T.navy });
+    put(ws, r, 2, o.divisions[d] || 0, { fmt: MONEY, align: 'right', bold: true, fill: T.sub });
+    put(ws, r, 3, '', { fill: T.sub }); put(ws, r, 4, '', { fill: T.sub }); put(ws, r, 5, '', { fill: T.sub }); put(ws, r, 6, '', { fill: T.sub });
+    r++;
   });
-  r += 1;
-  r = kv(ws, r, 'Hard construction costs', o.hardCost, MONEY, { bold: true, top: true });
-  r = kv(ws, r, 'Contingency (' + (o.contRate * 100).toFixed(0) + '%)', o.contingency, MONEY);
-  r = kv(ws, r, 'TOTAL CONSTRUCTION BUDGET', o.totalBudget, MONEY, { bold: true, top: true });
-  r = kv(ws, r, 'Cost per SF', o.costPerSf, MONEY2);
+  r++;
+  put(ws, r, 1, 'SUBTOTAL — HARD CONSTRUCTION COSTS', { bold: true, fill: T.ltblue });
+  put(ws, r, 2, o.hardCost, { fmt: MONEY, align: 'right', bold: true, fill: T.ltblue });
+  put(ws, r, 3, '', { fill: T.ltblue }); put(ws, r, 4, '', { fill: T.ltblue }); put(ws, r, 5, '', { fill: T.ltblue }); put(ws, r, 6, '', { fill: T.ltblue }); r++;
+  put(ws, r, 1, 'CONSTRUCTION CONTINGENCY (' + Math.round(o.contRate * 100) + '%)', { bold: true });
+  put(ws, r, 2, o.contingency, { fmt: MONEY, align: 'right', bold: true }); r++;
+  put(ws, r, 1, 'TOTAL CONSTRUCTION BUDGET', { bold: true, color: T.white, fill: T.navy });
+  put(ws, r, 2, o.totalBudget, { fmt: MONEY, align: 'right', bold: true, color: T.white, fill: T.navy });
+  put(ws, r, 3, '', { fill: T.navy }); put(ws, r, 4, '', { fill: T.navy }); put(ws, r, 5, '', { fill: T.navy });
+  put(ws, r, 6, (o.costPerSf ? '$' + o.costPerSf.toFixed(2) + '/SF' : ''), { color: T.white, fill: T.navy, align: 'right' });
 }
 
+// ---- Draw Schedule ---------------------------------------------------------
 function sheetDraws(wb, o) {
   const ws = wb.addWorksheet('Draw Schedule', { views: [{ showGridLines: false }] });
-  ws.getColumn(1).width = 12; ws.getColumn(2).width = 18; ws.getColumn(3).width = 16; ws.getColumn(4).width = 14;
-  ws.mergeCells('A1:D1'); ws.getCell('A1').value = 'ATERRA BUILDERS'; ws.getCell('A1').font = { name: FONT, size: 16, bold: true };
-  ws.mergeCells('A2:D2'); ws.getCell('A2').value = 'Construction Draw Schedule'; ws.getCell('A2').font = { name: FONT, size: 10, color: { argb: 'FF666666' } };
+  ws.getColumn(1).width = 12; ws.getColumn(2).width = 18; ws.getColumn(3).width = 16; ws.getColumn(4).width = 12;
+  titleBand(ws, 4, 'CONSTRUCTION DRAW SCHEDULE', 'Draws sized by formula from the budget line items');
   let r = 4;
-  const hdr = ws.getRow(r); hdr.values = ['Draw', 'Amount', 'Cumulative', 'Cum %'];
-  hdr.font = { name: FONT, size: 10, bold: true };
-  hdr.eachCell(function (c) { c.border = { bottom: { style: 'thin', color: { argb: 'FF333333' } } }; });
-  r += 1;
-  o.draws.forEach(function (d) {
-    ws.getCell('A' + r).value = 'Draw ' + d.n; ws.getCell('A' + r).font = { name: FONT, size: 10 };
-    const b = ws.getCell('B' + r); b.value = d.amount; b.numFmt = MONEY; b.font = { name: FONT, size: 10 }; b.alignment = { horizontal: 'right' };
-    const c = ws.getCell('C' + r); c.value = d.cumulative; c.numFmt = MONEY; c.font = { name: FONT, size: 10 }; c.alignment = { horizontal: 'right' };
-    const e = ws.getCell('D' + r); e.value = d.cumPct; e.numFmt = PCT; e.font = { name: FONT, size: 10 }; e.alignment = { horizontal: 'right' };
-    r += 1;
+  ['Draw', 'Amount', 'Cumulative', 'Cum %'].forEach(function (t, i) {
+    put(ws, r, i + 1, t, { bold: true, color: T.white, fill: T.navy2, align: i === 0 ? 'left' : 'right' });
   });
-  const tl = ws.getCell('A' + r); tl.value = 'Total'; tl.font = { name: FONT, size: 10, bold: true }; tl.border = { top: { style: 'thin', color: { argb: 'FF333333' } } };
-  const tb = ws.getCell('B' + r); tb.value = o.drawTotal; tb.numFmt = MONEY; tb.font = { name: FONT, size: 10, bold: true }; tb.alignment = { horizontal: 'right' }; tb.border = { top: { style: 'thin', color: { argb: 'FF333333' } } };
+  r++;
+  o.draws.forEach(function (d) {
+    put(ws, r, 1, 'Draw ' + d.n, { size: 10 });
+    put(ws, r, 2, d.amount, { fmt: MONEY, align: 'right' });
+    put(ws, r, 3, d.cumulative, { fmt: MONEY, align: 'right' });
+    put(ws, r, 4, d.cumPct, { fmt: PCT, align: 'right' });
+    r++;
+  });
+  put(ws, r, 1, 'Total', { bold: true, top: true });
+  put(ws, r, 2, o.drawTotal, { fmt: MONEY, align: 'right', bold: true, top: true });
+  ws.getCell(r, 3).border = ws.getCell(r, 4).border = { top: { style: 'thin', color: { argb: 'FF9AA6B2' } } };
 }
 
+// ---- Rules & Thresholds ----------------------------------------------------
+function sheetRules(wb, o) {
+  const ws = wb.addWorksheet('Rules & Thresholds', { views: [{ showGridLines: false }] });
+  ws.getColumn(1).width = 52; ws.getColumn(2).width = 16; ws.getColumn(3).width = 12;
+  titleBand(ws, 3, 'RULES & THRESHOLDS', o.rulesPass + ' of ' + o.rulesTotal + ' checks passing');
+  let r = 4;
+  ['Check', 'Value', 'Result'].forEach(function (t, i) {
+    put(ws, r, i + 1, t, { bold: true, color: T.white, fill: T.navy2, align: i === 0 ? 'left' : (i === 1 ? 'right' : 'center') });
+  });
+  r++;
+  o.rules.forEach(function (rule) {
+    const isMoney = (rule.key === 'dumpster' || rule.key === 'costSf' || rule.key === 'draws');
+    put(ws, r, 1, rule.label, { size: 10 });
+    put(ws, r, 2, rule.value, { fmt: isMoney ? MONEY : PCT, align: 'right' });
+    put(ws, r, 3, rule.pass ? 'PASS' : 'REVIEW', { bold: true, align: 'center', color: rule.pass ? T.green : T.red });
+    r++;
+  });
+}
+
+// ---- Capital Partners ------------------------------------------------------
 function sheetCapital(wb, p, o, c) {
   const ws = wb.addWorksheet('Capital Partners', { views: [{ showGridLines: false }] });
   ws.getColumn(1).width = 40; ws.getColumn(2).width = 18; ws.getColumn(3).width = 14; ws.getColumn(4).width = 16;
-  title(ws, 'Capital Partner Opportunity', p);
-  let r = 5;
-  sectionHeader(ws, r, 'CAPITAL STACK'); r += 1;
-  r = kv(ws, r, 'Senior construction loan (first lien)', c.seniorLoan, MONEY);
-  r = kv(ws, r, 'Partner capital raised', c.raised, MONEY);
-  r = kv(ws, r, 'Total capitalization', c.seniorLoan + c.raised, MONEY, { bold: true, top: true });
-  r += 1;
-  sectionHeader(ws, r, 'CASH NEED & RESERVE'); r += 1;
-  r = kv(ws, r, 'Cash required (equity + working capital)', c.cashNeed, MONEY);
-  r = kv(ws, r, 'Capital raised', c.raised, MONEY);
-  r = kv(ws, r, 'Reserve / (shortfall)', c.surplus, MONEY, { bold: true, top: true });
-  r += 1;
-  sectionHeader(ws, r, 'PROJECTED RETURNS'); r += 1;
-  r = kv(ws, r, 'Net profit to partnership', o.netProfit, MONEY);
-  r = kv(ws, r, 'Profit per capital partner', c.profitPerCap, MONEY);
-  r = kv(ws, r, 'Return on capital', c.roc, PCT);
-  r = kv(ws, r, 'Annualized return', c.annual, PCT);
-  r += 1;
-  sectionHeader(ws, r, 'DOWNSIDE — SALE PRICE SENSITIVITY'); r += 1;
-  const hdr = ws.getRow(r); hdr.values = ['Sale $/SF', 'Sale price', 'Net profit', 'Per partner'];
-  hdr.font = { name: FONT, size: 10, bold: true };
-  hdr.eachCell(function (cell) { cell.border = { bottom: { style: 'thin', color: { argb: 'FF333333' } } }; });
-  r += 1;
-  c.downside.forEach(function (d) {
-    ws.getCell('A' + r).value = Math.round(d.psf); ws.getCell('A' + r).font = { name: FONT, size: 10 };
-    const b = ws.getCell('B' + r); b.value = d.sale; b.numFmt = MONEY; b.font = { name: FONT, size: 10 }; b.alignment = { horizontal: 'right' };
-    const n = ws.getCell('C' + r); n.value = d.netProfit; n.numFmt = MONEY; n.font = { name: FONT, size: 10 }; n.alignment = { horizontal: 'right' };
-    const pc = ws.getCell('D' + r); pc.value = d.perCapital; pc.numFmt = MONEY; pc.font = { name: FONT, size: 10 }; pc.alignment = { horizontal: 'right' };
-    r += 1;
-  });
-  r += 1;
-  ws.mergeCells('A' + r + ':D' + r);
-  const note = ws.getCell('A' + r);
-  note.value = 'Break-even sale ≈ $' + Math.round(c.breakEvenPsf) + '/SF. Proposal for discussion, not an offer. Review with a securities attorney before accepting capital.';
-  note.font = { name: FONT, size: 9, italic: true, color: { argb: 'FF666666' } };
-}
-
-function sheetChecks(wb, o) {
-  const ws = wb.addWorksheet('Underwriting Checks', { views: [{ showGridLines: false }] });
-  ws.getColumn(1).width = 48; ws.getColumn(2).width = 14; ws.getColumn(3).width = 14;
-  ws.mergeCells('A1:C1'); ws.getCell('A1').value = 'ATERRA BUILDERS'; ws.getCell('A1').font = { name: FONT, size: 16, bold: true };
-  ws.mergeCells('A2:C2'); ws.getCell('A2').value = 'Underwriting Checks  —  ' + o.rulesPass + ' of ' + o.rulesTotal + ' passing'; ws.getCell('A2').font = { name: FONT, size: 10, color: { argb: 'FF666666' } };
+  titleBand(ws, 4, 'CAPITAL PARTNER OPPORTUNITY', subLine(p));
   let r = 4;
-  const hdr = ws.getRow(r); hdr.values = ['Check', 'Value', 'Result'];
-  hdr.font = { name: FONT, size: 10, bold: true };
-  hdr.eachCell(function (c) { c.border = { bottom: { style: 'thin', color: { argb: 'FF333333' } } }; });
-  r += 1;
-  o.rules.forEach(function (rule) {
-    ws.getCell('A' + r).value = rule.label; ws.getCell('A' + r).font = { name: FONT, size: 10 };
-    const v = ws.getCell('B' + r);
-    const isMoney = (rule.key === 'dumpster' || rule.key === 'costSf' || rule.key === 'draws');
-    v.value = rule.value; v.numFmt = isMoney ? MONEY : PCT; v.font = { name: FONT, size: 10 }; v.alignment = { horizontal: 'right' };
-    const res = ws.getCell('C' + r);
-    res.value = rule.pass ? 'PASS' : 'REVIEW';
-    res.font = { name: FONT, size: 10, bold: true, color: { argb: rule.pass ? 'FF1C6B2C' : 'FFC0402F' } };
-    res.alignment = { horizontal: 'center' };
-    r += 1;
+  band(ws, r, 1, 4, 'CAPITAL STACK'); r++;
+  kv(ws, r++, 1, 'Senior construction loan (first lien)', 2, c.seniorLoan, MONEY);
+  kv(ws, r++, 1, 'Partner capital raised', 2, c.raised, MONEY);
+  kv(ws, r++, 1, 'Total capitalization', 2, c.seniorLoan + c.raised, MONEY, { bold: true, top: true });
+  r++;
+  band(ws, r, 1, 4, 'CASH NEED & RESERVE'); r++;
+  kv(ws, r++, 1, 'Cash required (equity + working capital)', 2, c.cashNeed, MONEY);
+  kv(ws, r++, 1, 'Capital raised', 2, c.raised, MONEY);
+  kv(ws, r++, 1, 'Reserve / (shortfall)', 2, c.surplus, MONEY, { bold: true, top: true });
+  r++;
+  band(ws, r, 1, 4, 'PROJECTED RETURNS'); r++;
+  kv(ws, r++, 1, 'Net profit to partnership', 2, o.netProfit, MONEY);
+  kv(ws, r++, 1, 'Profit per capital partner', 2, c.profitPerCap, MONEY);
+  kv(ws, r++, 1, 'Return on capital', 2, c.roc, PCT);
+  kv(ws, r++, 1, 'Annualized return', 2, c.annual, PCT);
+  r++;
+  band(ws, r, 1, 4, 'PARTNER SUMMARY'); r++;
+  ['Partner', 'Capital In', 'Ownership', 'Proj. Profit'].forEach(function (t, i) {
+    put(ws, r, i + 1, t, { bold: true, color: T.white, fill: T.navy2, align: i === 0 ? 'left' : 'right' });
   });
+  r++;
+  for (let i = 1; i <= c.ops; i++) {
+    put(ws, r, 1, 'Operating partner ' + i, { size: 10 });
+    put(ws, r, 2, '—', { align: 'right' });
+    put(ws, r, 3, c.opEach, { fmt: PCT, align: 'right' });
+    put(ws, r, 4, c.profitPerOp, { fmt: MONEY, align: 'right' });
+    r++;
+  }
+  for (let j = 1; j <= c.np; j++) {
+    put(ws, r, 1, 'Capital partner ' + j, { size: 10 });
+    put(ws, r, 2, c.cpp, { fmt: MONEY, align: 'right' });
+    put(ws, r, 3, c.ownEach, { fmt: PCT, align: 'right' });
+    put(ws, r, 4, c.profitPerCap, { fmt: MONEY, align: 'right' });
+    r++;
+  }
+  r++;
+  band(ws, r, 1, 4, 'DOWNSIDE — SALE PRICE SENSITIVITY'); r++;
+  ['Sale $/SF', 'Sale price', 'Net profit', 'Per partner'].forEach(function (t, i) {
+    put(ws, r, i + 1, t, { bold: true, color: T.white, fill: T.navy2, align: i === 0 ? 'left' : 'right' });
+  });
+  r++;
+  c.downside.forEach(function (d) {
+    put(ws, r, 1, Math.round(d.psf), { align: 'left' });
+    put(ws, r, 2, d.sale, { fmt: MONEY, align: 'right' });
+    put(ws, r, 3, d.netProfit, { fmt: MONEY, align: 'right' });
+    put(ws, r, 4, d.perCapital, { fmt: MONEY, align: 'right' });
+    r++;
+  });
+  r++;
+  ws.mergeCells(r, 1, r, 4);
+  put(ws, r, 1, 'Break-even sale ≈ $' + Math.round(c.breakEvenPsf) + '/SF. Proposal for discussion, not an offer. Review with a securities attorney before accepting capital.', { size: 9, italic: true, color: T.gray, wrap: true });
 }
