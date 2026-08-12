@@ -239,6 +239,10 @@
         [data-panel="loans"] .lp-subnav{display:flex;gap:.4rem;background:#eceae4;border-radius:8px;padding:3px;margin-bottom:1rem}
         [data-panel="loans"] .lp-subnav button{flex:1;border:0;background:transparent;padding:.5em .6em;border-radius:6px;font:inherit;font-size:.8rem;cursor:pointer;color:var(--muted)}
         [data-panel="loans"] .lp-subnav button.on{background:#fff;color:#111;box-shadow:0 1px 2px rgba(0,0,0,.08);font-weight:600}
+        [data-panel="loans"] .lp-ready{font-size:.78rem;color:var(--muted);background:#f6f6f3;border:1px solid var(--line,#e7e7e2);border-radius:8px;padding:.4em .6em;margin-bottom:.6rem}
+        [data-panel="loans"] .lp-ready b{color:#111}
+        [data-panel="loans"] .lp-ready.go{background:#eaf6ec;border-color:#bfe0c6;color:#1c6b2c}
+        [data-panel="loans"] .lp-ready.go b{color:#1c6b2c}
         [data-panel="loans"] .lp-switch{display:inline-flex;background:#eceae4;border-radius:8px;padding:3px;margin-bottom:.9rem}
         [data-panel="loans"] .lp-switch button{border:0;background:transparent;padding:.4em .9em;border-radius:6px;font:inherit;font-size:.82rem;cursor:pointer;color:var(--muted)}
         [data-panel="loans"] .lp-switch button.on{background:#fff;color:#111;box-shadow:0 1px 2px rgba(0,0,0,.08);font-weight:600}
@@ -275,6 +279,7 @@
         </select>
         <button id="lp-xls" class="btn">Export Excel</button>
         <button id="lp-xls-live" class="btn" title="Formula-driven workbook a lender can edit">Export (live)</button>
+        <button id="lp-share" class="btn" title="Create a private read-only link for a lender">Share link</button>
         <button id="lp-del" class="btn" style="margin-left:auto">Delete</button>
         <p id="lp-note" class="form-note" role="status" aria-live="polite" style="width:100%;margin:.2rem 0 0"></p>
       </div>
@@ -1135,10 +1140,15 @@
     var o = window.LoanCalc.compute(current.project, current.lines);
     current.calc = o;
     var view = current.view === 'cap' ? 'cap' : 'uw';
+    var docs = current.project.documents || [];
+    var sent = docs.filter(function (d) { return d.status === 'Sent'; }).length;
+    var allChecks = o.rulesPass === o.rulesTotal;
+    var ready = '<div class="lp-ready ' + (allChecks && docs.length && sent === docs.length ? 'go' : '') + '">' +
+      'Readiness: <b>' + sent + '/' + docs.length + '</b> docs sent · <b>' + o.rulesPass + '/' + o.rulesTotal + '</b> checks passing</div>';
     var sw = '<div class="lp-switch">' +
       '<button data-view="uw" class="' + (view === 'uw' ? 'on' : '') + '">Underwriting</button>' +
       '<button data-view="cap" class="' + (view === 'cap' ? 'on' : '') + '">Capital Partners</button></div>';
-    $('#lp-results').innerHTML = sw + (view === 'cap' ? lpCapitalHTML(o) : lpUnderwritingHTML(o));
+    $('#lp-results').innerHTML = ready + sw + (view === 'cap' ? lpCapitalHTML(o) : lpUnderwritingHTML(o));
   }
 
   function lpRenderEditor() {
@@ -1336,8 +1346,24 @@
     reader.readAsDataURL(f);
   }
 
+  function lpShare() {
+    if (!current || !current.project || current.isNew || !current.project.id) { note($('#lp-note'), 'Save the project first, then share.', 'err'); return; }
+    var btn = $('#lp-share'); btn.disabled = true; note($('#lp-note'), 'Creating share link…');
+    var token = makeToken();
+    api('loan_share_links', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ token: token, project_id: current.project.id, label: current.project.name || '' }) })
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('create failed')); })
+      .then(function () {
+        var base = (cfg.SITE_URL && !/YOUR_/.test(cfg.SITE_URL)) ? cfg.SITE_URL : 'https://aterrabuilders.com';
+        var url = base.replace(/\/$/, '') + '/package.html?key=' + token;
+        if (navigator.clipboard) navigator.clipboard.writeText(url).catch(function () {});
+        note($('#lp-note'), 'Read-only lender link copied to clipboard: ' + url, 'ok');
+      }).catch(function () { note($('#lp-note'), 'Could not create share link.', 'err'); })
+      .finally(function () { btn.disabled = false; });
+  }
+
   // wire the loan-package controls once
   $('#lp-picker').addEventListener('change', function () { lpSelect(this.value); });
+  $('#lp-share').addEventListener('click', lpShare);
   $('#lp-xls').addEventListener('click', function () { lpExport('values'); });
   $('#lp-xls-live').addEventListener('click', function () { lpExport('formulas'); });
   $('#lp-import').addEventListener('click', lpImport);
