@@ -451,3 +451,47 @@ alter table public.loan_share_links enable row level security;
 drop policy if exists lsl_admin_all on public.loan_share_links;
 create policy lsl_admin_all on public.loan_share_links
   for all using ( is_admin() ) with check ( is_admin() );
+
+-- ================================================================
+-- CONTACTS — rolodex for lenders, contractors & trades, and others.
+-- One flexible table; category-specific columns (rate/points/LTV for
+-- lenders; trade/address for contractors) coexist and are shown per row.
+-- ================================================================
+create table if not exists public.contacts (
+  id            uuid primary key default gen_random_uuid(),
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now(),
+  category      text not null default 'lender',   -- 'lender' | 'contractor' | 'other'
+  company       text,                              -- Lender / Company name
+  contact_name  text,
+  title         text,                              -- e.g. Owner, Account Exec
+  email         text,
+  phone         text,
+  website       text,
+  instagram     text,
+  status        text default 'Active',             -- Active | Preferred | Prospect | Do Not Use
+  notes         text,
+  last_contacted date,
+  -- contractor / trade fields
+  trade         text,                              -- e.g. Drywall, Framing, HVAC
+  address       text,
+  market        text,                              -- also lender: market / states served
+  -- lender program fields
+  loan_type     text,                              -- loan type / program
+  ltv_ltc       text,                              -- typical LTV / LTC
+  rate          text,                              -- rate (free text to allow ranges)
+  points_fees   text,                              -- points / fees
+  term          text,                              -- typical term
+  close_time    text                               -- typical close time
+);
+create index if not exists contacts_category_idx on public.contacts(category, company);
+
+drop trigger if exists contacts_touch_updated on public.contacts;
+create trigger contacts_touch_updated
+  before update on public.contacts
+  for each row execute function public.touch_updated_at();
+
+alter table public.contacts enable row level security;
+drop policy if exists contacts_admin_all on public.contacts;
+create policy contacts_admin_all on public.contacts
+  for all using ( is_admin() ) with check ( is_admin() );
