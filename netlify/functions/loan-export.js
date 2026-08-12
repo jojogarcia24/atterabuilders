@@ -48,7 +48,9 @@ exports.handler = async function (event) {
 
     const o = LoanCalc.compute(project, lines);
     const cap = LoanCalc.capital(o, project.capital || {});
-    const wb = buildWorkbook(project, lines, o, cap);
+    const wb = (body.mode === 'formulas')
+      ? buildFormulaWorkbook(project, lines, o, cap)
+      : buildWorkbook(project, lines, o, cap);
 
     const buf = await wb.xlsx.writeBuffer();
     const fname = String(project.name || 'loan-package').replace(/[^a-z0-9\-_. ]/gi, '').trim().slice(0, 60) || 'loan-package';
@@ -84,6 +86,29 @@ function put(ws, r, c, v, o) {
   if (o.fmt) cell.numFmt = o.fmt;
   cell.alignment = { horizontal: o.align || 'left', vertical: 'middle', wrapText: !!o.wrap };
   if (o.top) cell.border = { top: { style: 'thin', color: { argb: 'FF9AA6B2' } } };
+  return cell;
+}
+
+// a formula cell (formula string WITHOUT a leading '=')
+function putF(ws, r, c, formula, o) {
+  o = o || {};
+  const cell = ws.getCell(r, c);
+  cell.value = { formula: formula };
+  cell.font = { name: FONT, size: o.size || 10, bold: !!o.bold, color: { argb: o.color || T.black } };
+  if (o.fill) cell.fill = solid(o.fill);
+  if (o.fmt) cell.numFmt = o.fmt;
+  cell.alignment = { horizontal: o.align || 'right', vertical: 'middle' };
+  if (o.top) cell.border = { top: { style: 'thin', color: { argb: 'FF9AA6B2' } } };
+  return cell;
+}
+// an editable input literal (blue text on yellow, like the source workbook)
+function putInput(ws, r, c, val, fmt) {
+  const cell = ws.getCell(r, c);
+  cell.value = val;
+  cell.font = { name: FONT, size: 10, color: { argb: T.blue } };
+  cell.fill = solid(T.yellow);
+  if (fmt) cell.numFmt = fmt;
+  cell.alignment = { horizontal: 'right', vertical: 'middle' };
   return cell;
 }
 
@@ -474,3 +499,165 @@ function sheetDocs(wb, p) {
     r++;
   });
 }
+
+// ===========================================================================
+// LIVE-FORMULA workbook — inputs are literals; everything else is a real Excel
+// formula, so a lender can change any yellow cell and the file recalculates.
+// ===========================================================================
+function buildFormulaWorkbook(p, lines, o, cap) {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'Aterra Builders';
+  const lsSheet = wb.addWorksheet('Loan Summary', { views: [{ showGridLines: false }] });
+  const bud = fbBudget(wb, p, lines);
+  fbLoanSummary(lsSheet, p, bud);
+  fbDraws(wb, bud);
+  fbRules(wb);
+  try { wb.calcProperties = { fullCalcOnLoad: true }; } catch (e) { /* Excel auto-calcs on open anyway */ }
+  return wb;
+}
+
+function fbBudget(wb, p, lines) {
+  const ws = wb.addWorksheet('Construction Budget', { views: [{ showGridLines: false }] });
+  ws.getColumn(1).width = 46; ws.getColumn(2).width = 16; ws.getColumn(3).width = 8; ws.getColumn(4).width = 11; ws.getColumn(5).width = 11;
+  titleBand(ws, 5, 'DETAILED CONSTRUCTION BUDGET — BY TRADE DIVISION', subLine(p));
+  let r = 4;
+  ['Line Item', 'Amount ($)', 'Draw #', '% Budget', 'Cost / SF'].forEach(function (t, i) {
+    put(ws, r, i + 1, t, { bold: true, color: T.white, fill: T.navy2, align: i === 0 ? 'left' : 'right' });
+  });
+  r++;
+  const byDiv = {}; (lines || []).forEach(function (l) { const d = l.division || 'Other'; (byDiv[d] = byDiv[d] || []).push(l); });
+  const subtotals = []; let first = null, last = null;
+  Object.keys(byDiv).sort().forEach(function (d) {
+    ws.mergeCells(r, 1, r, 5); put(ws, r, 1, d, { bold: true, color: T.navy, fill: T.ltblue }); r++;
+    const start = r;
+    byDiv[d].forEach(function (l) {
+      if (first === null) first = r;
+      put(ws, r, 1, l.line_item || '', { size: 10 });
+      putInput(ws, r, 2, Number(l.amount) || 0, MONEY);
+      put(ws, r, 3, l.draw_number || '', { align: 'center' });
+      putF(ws, r, 4, "IFERROR(B" + r + "/'Loan Summary'!$C$21,\"\")", { fmt: PCT, fill: T.faint });
+      putF(ws, r, 5, "IFERROR(B" + r + "/'Loan Summary'!$C$4,\"\")", { fmt: MONEY2, fill: T.faint });
+      last = r; r++;
+    });
+    put(ws, r, 1, '    Subtotal — ' + d, { bold: true, italic: true, color: T.navy, fill: T.sub });
+    putF(ws, r, 2, 'SUM(B' + start + ':B' + (r - 1) + ')', { fmt: MONEY, bold: true, fill: T.sub });
+    put(ws, r, 3, '', { fill: T.sub }); put(ws, r, 4, '', { fill: T.sub }); put(ws, r, 5, '', { fill: T.sub });
+    subtotals.push('B' + r); r++;
+  });
+  r++;
+  const hc = r;
+  put(ws, r, 1, 'SUBTOTAL — HARD CONSTRUCTION COSTS', { bold: true, fill: T.ltblue });
+  putF(ws, r, 2, subtotals.length ? subtotals.join('+') : '0', { fmt: MONEY, bold: true, fill: T.ltblue });
+  put(ws, r, 3, '', { fill: T.ltblue }); put(ws, r, 4, '', { fill: T.ltblue }); put(ws, r, 5, '', { fill: T.ltblue }); r++;
+  const cont = r;
+  put(ws, r, 1, 'CONSTRUCTION CONTINGENCY', { bold: true });
+  putF(ws, r, 2, 'B' + hc + "*'Loan Summary'!$C$12", { fmt: MONEY, bold: true }); r++;
+  const tot = r;
+  put(ws, r, 1, 'TOTAL CONSTRUCTION BUDGET', { bold: true, color: T.white, fill: T.navy });
+  putF(ws, r, 2, 'B' + hc + '+B' + cont, { fmt: MONEY, bold: true, color: T.white, fill: T.navy });
+  put(ws, r, 3, '', { fill: T.navy }); put(ws, r, 4, '', { fill: T.navy }); put(ws, r, 5, '', { fill: T.navy });
+  return { hc: hc, cont: cont, tot: tot, first: first || 5, last: last || 5 };
+}
+
+function fbLoanSummary(ws, p, bud) {
+  ws.getColumn(1).width = 3; ws.getColumn(2).width = 44; ws.getColumn(3).width = 20;
+  titleBand(ws, 3, 'ATERRA BUILDERS — CONSTRUCTION LOAN REQUEST (LIVE MODEL)', subLine(p));
+  const CB = "'Construction Budget'!";
+  const rules = p.rules || {};
+  band(ws, 3, 2, 3, 'INPUTS — EDIT THE YELLOW CELLS', { fill: T.navy2, size: 12 });
+  const inputs = [
+    [4, 'Completed square footage', num(p.square_footage), '#,##0'],
+    [5, 'Purchase / as-is value', num(p.purchase_price), MONEY],
+    [6, 'Closing, title & survey', num(p.closing_costs), MONEY],
+    [7, 'ARV per SF', num(p.arv_per_sf), MONEY],
+    [8, 'Interest rate (annual)', num(p.interest_rate) || 0.095, PCT],
+    [9, 'Term (months)', num(p.term_months) || 8, '0'],
+    [10, 'Lender points (% of loan)', num(p.points_pct) || 0.015, PCT],
+    [11, 'Admin / doc / processing fee', num(p.admin_fee) || 5000, MONEY],
+    [12, 'Contingency rate', num(p.contingency_rate) || 0.05, PCT],
+    [13, 'Selling cost (% of ARV)', num(p.selling_cost_pct) || 0.03, PCT],
+    [14, 'Max Loan-to-Cost', num(rules.max_ltc) || 0.85, PCT],
+    [15, 'Max Loan-to-ARV', num(rules.max_ltarv) || 0.75, PCT],
+    [16, 'Min gross margin', num(rules.min_margin) || 0.15, PCT],
+    [17, 'Min borrower equity', num(rules.min_equity) || 0.15, PCT],
+    [18, 'Max hard cost / SF', num(rules.max_cost_per_sf) || 250, MONEY]
+  ];
+  inputs.forEach(function (row) { put(ws, row[0], 2, row[1], { size: 10 }); putInput(ws, row[0], 3, row[2], row[3]); });
+  band(ws, 20, 2, 3, 'RESULTS — CALCULATED', { fill: T.navy2, size: 12 });
+  const D = [
+    [21, 'Hard construction costs', CB + '$B$' + bud.hc, MONEY, false],
+    [22, 'Contingency', CB + '$B$' + bud.cont, MONEY, false],
+    [23, 'Total construction budget (holdback)', CB + '$B$' + bud.tot, MONEY, false],
+    [24, 'After Repair Value (ARV)', 'C7*C4', MONEY, false],
+    [25, 'Acquisition advance', 'MIN( ( C14*( (C5+C6+C21+C22) + C10*C23 + C11 + 0.5*(C8*C9/12)*C23 ) - C23 ) / ( 1 - C14*(C10 + (C8*C9/12)) ), C15*C24 - C23 )', MONEY, false],
+    [26, 'Total loan amount', 'C25+C23', MONEY, true],
+    [27, 'Average outstanding balance', 'C25+0.5*C23', MONEY, false],
+    [28, 'Interest reserve (paid monthly)', 'C8*(C9/12)*C27', MONEY, false],
+    [29, 'Lender points & fees', 'C10*C26+C11', MONEY, false],
+    [30, 'Total project cost', 'C5+C6+C21+C22+C28+C29', MONEY, true],
+    [31, 'Borrower equity', 'C30-C26', MONEY, false],
+    [32, 'Borrower equity % of cost', 'C31/C30', PCT, false],
+    [33, 'Loan-to-Cost (LTC)', 'C26/C30', PCT, false],
+    [34, 'Loan-to-ARV (LTARV)', 'C26/C24', PCT, false],
+    [35, 'Gross profit', 'C24-C30', MONEY, false],
+    [36, 'Gross margin on ARV', 'C35/C24', PCT, false],
+    [37, 'Selling costs', 'C24*C13', MONEY, false],
+    [38, 'Net profit after sale', 'C35-C37', MONEY, true],
+    [39, 'Net margin on ARV', 'C38/C24', PCT, false],
+    [40, 'Cash-on-cash return', 'C38/C31', PCT, false],
+    [41, 'Down payment', 'C5-C25', MONEY, false],
+    [42, 'Cash to close', 'C41+C29+C6', MONEY, false],
+    [43, 'Total cash into the deal', 'C42+C28', MONEY, true],
+    [44, 'Break-even sale price', 'C30/(1-C13)', MONEY, false],
+    [45, 'Hard cost per SF', 'C21/C4', MONEY2, false]
+  ];
+  D.forEach(function (row) { put(ws, row[0], 2, row[1], { size: 10, bold: !!row[4] }); putF(ws, row[0], 3, row[2], { fmt: row[3], bold: !!row[4] }); });
+  put(ws, 47, 2, 'Legend: yellow = editable input. Change any yellow cell and the workbook recalculates.', { size: 9, italic: true, color: T.gray });
+}
+
+function fbDraws(wb, bud) {
+  const ws = wb.addWorksheet('Draw Schedule', { views: [{ showGridLines: false }] });
+  ws.getColumn(1).width = 12; ws.getColumn(2).width = 18; ws.getColumn(3).width = 16; ws.getColumn(4).width = 12;
+  titleBand(ws, 4, 'CONSTRUCTION DRAW SCHEDULE (LIVE)', 'Amounts are SUMIF over the budget draw column');
+  let r = 4;
+  ['Draw', 'Amount', 'Cumulative', 'Cum %'].forEach(function (t, i) { put(ws, r, i + 1, t, { bold: true, color: T.white, fill: T.navy2, align: i === 0 ? 'left' : 'right' }); });
+  r++;
+  const CB = "'Construction Budget'!";
+  const dr = CB + '$C$' + bud.first + ':$C$' + bud.last;
+  const ar = CB + '$B$' + bud.first + ':$B$' + bud.last;
+  const firstRow = r;
+  for (let n = 1; n <= 6; n++) {
+    put(ws, r, 1, 'Draw ' + n, { size: 10 });
+    putF(ws, r, 2, 'SUMIF(' + dr + ',' + n + ',' + ar + ')', { fmt: MONEY });
+    if (r === firstRow) putF(ws, r, 3, 'B' + r, { fmt: MONEY });
+    else putF(ws, r, 3, 'C' + (r - 1) + '+B' + r, { fmt: MONEY });
+    putF(ws, r, 4, 'IFERROR(C' + r + '/' + CB + '$B$' + bud.hc + ',"")', { fmt: PCT });
+    r++;
+  }
+  put(ws, r, 1, 'Total', { bold: true, top: true });
+  putF(ws, r, 2, 'SUM(B' + firstRow + ':B' + (r - 1) + ')', { fmt: MONEY, bold: true, top: true });
+}
+
+function fbRules(wb) {
+  const ws = wb.addWorksheet('Rules & Thresholds', { views: [{ showGridLines: false }] });
+  ws.getColumn(1).width = 46; ws.getColumn(2).width = 14; ws.getColumn(3).width = 12;
+  titleBand(ws, 3, 'RULES & THRESHOLDS (LIVE)', 'Checks recompute from the Loan Summary');
+  let r = 4;
+  ['Check', 'Value', 'Result'].forEach(function (t, i) { put(ws, r, i + 1, t, { bold: true, color: T.white, fill: T.navy2, align: i === 0 ? 'left' : (i === 1 ? 'right' : 'center') }); });
+  r++;
+  const LS = "'Loan Summary'!";
+  const checks = [
+    ['Loan-to-Cost within cap', LS + '$C$33', PCT, LS + '$C$33<=' + LS + '$C$14+0.0001'],
+    ['Loan-to-ARV within cap', LS + '$C$34', PCT, LS + '$C$34<=' + LS + '$C$15'],
+    ['Gross margin at/above minimum', LS + '$C$36', PCT, LS + '$C$36>=' + LS + '$C$16'],
+    ['Borrower equity at/above minimum', LS + '$C$32', PCT, LS + '$C$32>=' + LS + '$C$17-0.0001'],
+    ['Hard cost / SF within benchmark', LS + '$C$45', MONEY, LS + '$C$45<=' + LS + '$C$18']
+  ];
+  checks.forEach(function (c) {
+    put(ws, r, 1, c[0], { size: 10 });
+    putF(ws, r, 2, c[1], { fmt: c[2] });
+    putF(ws, r, 3, 'IF(' + c[3] + ',"PASS","REVIEW")', { bold: true, align: 'center' });
+    r++;
+  });
+}
+exports.buildFormulaWorkbook = buildFormulaWorkbook;
