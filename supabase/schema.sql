@@ -343,3 +343,83 @@ grant  execute on function public.list_admins() to authenticated;
 -- ================================================================
 -- update public.profiles set role = 'admin'
 --   where id = (select id from auth.users where email = 'you@yourdomain.com');
+
+-- ================================================================
+-- 9. CONSTRUCTION LOAN PACKAGES  (per-project underwriting module)
+--    Admin-gated via is_admin(); powers the "Loan Packages" admin tab.
+-- ================================================================
+
+-- keep updated_at fresh on projects
+create or replace function public.touch_updated_at() returns trigger
+language plpgsql as $$
+begin
+  new.updated_at = now();
+  return new;
+end $$;
+
+create table if not exists public.projects (
+  id               uuid primary key default gen_random_uuid(),
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now(),
+  created_by       uuid references auth.users(id),
+  name             text not null,
+  status           text not null default 'draft',   -- 'draft' | 'active' | 'submitted' | 'closed'
+  -- property snapshot
+  address          text,
+  borrower         text,
+  scope            text,
+  square_footage   numeric,
+  stories          numeric,
+  beds_baths       text,
+  lot_size         text,
+  term_months      integer default 8,
+  start_date       date,
+  completion_date  date,
+  -- deal inputs (the yellow cells)
+  purchase_price   numeric not null default 0,
+  closing_costs    numeric not null default 0,
+  arv_per_sf       numeric not null default 0,
+  interest_rate    numeric not null default 0.095,
+  points_pct       numeric not null default 0.015,
+  admin_fee        numeric not null default 5000,
+  contingency_rate numeric not null default 0.05,
+  selling_cost_pct numeric not null default 0.03,
+  escrow_interest  boolean not null default false,  -- false = borrower pays interest monthly
+  -- underwriting thresholds (editable per project)
+  rules            jsonb not null default '{
+    "max_ltc": 0.85, "max_ltarv": 0.75, "min_contingency": 0.05,
+    "min_margin": 0.15, "min_equity": 0.15, "max_cost_per_sf": 250,
+    "max_line_share": 0.15, "max_dumpster": 20000
+  }'::jsonb,
+  notes            text
+);
+create index if not exists projects_created_idx on public.projects(created_at desc);
+
+drop trigger if exists projects_touch_updated on public.projects;
+create trigger projects_touch_updated
+  before update on public.projects
+  for each row execute function public.touch_updated_at();
+
+create table if not exists public.project_budget_lines (
+  id           uuid primary key default gen_random_uuid(),
+  project_id   uuid not null references public.projects(id) on delete cascade,
+  division     text,                 -- e.g. '30 — FOUNDATION & STRUCTURE'
+  line_item    text,
+  amount       numeric not null default 0,
+  draw_number  integer,              -- 1..6 (null = unassigned)
+  scope_notes  text,
+  sort_order   integer not null default 0,
+  created_at   timestamptz not null default now()
+);
+create index if not exists pbl_project_idx on public.project_budget_lines(project_id, sort_order);
+
+alter table public.projects             enable row level security;
+alter table public.project_budget_lines enable row level security;
+
+drop policy if exists projects_admin_all on public.projects;
+create policy projects_admin_all on public.projects
+  for all using ( is_admin() ) with check ( is_admin() );
+
+drop policy if exists pbl_admin_all on public.project_budget_lines;
+create policy pbl_admin_all on public.project_budget_lines
+  for all using ( is_admin() ) with check ( is_admin() );
