@@ -261,7 +261,11 @@ async function aiExtract(text) {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'x-api-key': AI_KEY, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: AI_MODEL, max_tokens: 4000, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({
+        model: AI_MODEL, max_tokens: 8000,
+        system: 'You are a data-extraction tool. Respond with a single raw JSON object only — no prose, no explanation, and no markdown code fences.',
+        messages: [{ role: 'user', content: prompt }, { role: 'assistant', content: '{' }]
+      })
     });
     if (!res.ok) {
       let detail = '';
@@ -270,14 +274,40 @@ async function aiExtract(text) {
       return { data: null, diag: 'the API returned ' + res.status + ' for model "' + AI_MODEL + '"' + (detail ? ': ' + detail : '') + '.' };
     }
     const data = await res.json();
-    const txt = (data.content && data.content[0] && data.content[0].text) || '';
-    const m = txt.match(/\{[\s\S]*\}/);
-    if (!m) return { data: null, diag: 'the model replied but returned no JSON we could parse.' };
-    try { return { data: JSON.parse(m[0]), diag: null }; }
-    catch (e) { return { data: null, diag: 'the model returned malformed JSON.' }; }
+    // gather every text block (the reply was prefilled with "{", so prepend it)
+    let txt = '{' + (Array.isArray(data.content)
+      ? data.content.filter(function (c) { return c && c.type === 'text' && typeof c.text === 'string'; }).map(function (c) { return c.text; }).join('')
+      : '');
+    txt = txt.replace(/```(?:json)?/gi, '').trim();      // strip any stray code fences
+    const obj = extractJsonObject(txt);
+    if (!obj) {
+      const stop = data.stop_reason ? ' (stop_reason: ' + data.stop_reason + ')' : '';
+      const snip = txt.replace(/\s+/g, ' ').slice(0, 180);
+      return { data: null, diag: 'the model replied but returned no JSON we could parse' + stop + '. It said: "' + snip + '…"' };
+    }
+    return { data: obj, diag: null };
   } catch (e) {
     return { data: null, diag: 'the request failed (' + String((e && e.message) || e) + ').' };
   }
+}
+
+// Find the first balanced {...} object in a string and JSON.parse it.
+// More robust than a greedy regex: tolerates trailing prose or truncation.
+function extractJsonObject(s) {
+  const start = s.indexOf('{');
+  if (start < 0) return null;
+  let depth = 0, inStr = false, escaped = false;
+  for (let i = start; i < s.length; i++) {
+    const ch = s[i];
+    if (inStr) {
+      if (escaped) escaped = false;
+      else if (ch === '\\') escaped = true;
+      else if (ch === '"') inStr = false;
+    } else if (ch === '"') inStr = true;
+    else if (ch === '{') depth++;
+    else if (ch === '}') { depth--; if (depth === 0) { try { return JSON.parse(s.slice(start, i + 1)); } catch (e) { return null; } } }
+  }
+  return null;   // never closed (e.g. truncated at max_tokens)
 }
 
 exports.parseWorkbook = parseWorkbook;
