@@ -49,7 +49,6 @@
     <div id="app"><div class="msg">Loading package…</div></div>
   </div>
 
-<script src="loan-calc.js"></script>
 <script>
 (function () {
   var app = document.getElementById('app');
@@ -64,55 +63,56 @@
     .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
     .then(function (res) {
       if (!res.ok) throw new Error(res.j.error || 'This link is not available.');
-      render(res.j.project, res.j.lines || []);
+      render(res.j.view);
     })
     .catch(function (e) { app.innerHTML = '<div class="msg">' + esc(e.message) + '</div>'; });
 
   function kpi(k, v, s) { return '<div class="kpi"><div class="k">' + k + '</div><div class="v">' + v + '</div>' + (s ? '<div class="s">' + s + '</div>' : '') + '</div>'; }
 
-  function render(p, lines) {
-    var o = window.LoanCalc.compute(p, lines);
-    var divs = Object.keys(o.divisions).sort();
-    var maxDraw = Math.max.apply(null, o.draws.map(function (d) { return d.amount; }).concat([1]));
+  function render(v) {
+    var p = v.property || {};
+    var b = v.budget || { divisions: {} };
+    var divs = Object.keys(b.divisions).sort();
+    var maxDraw = Math.max.apply(null, (v.draws || []).map(function (d) { return d.amount; }).concat([1]));
 
     var h = '';
     h += '<h1>' + esc(p.address || p.name || 'Construction Loan Request') + '</h1>';
-    h += '<div class="sub">' + esc(p.scope || '') + (p.square_footage ? ' · ' + Number(p.square_footage).toLocaleString() + ' SF' : '') + (p.beds_baths ? ' · ' + esc(p.beds_baths) : '') + '</div>';
+    h += '<div class="sub">' + esc(p.scope || '') + (p.square_footage ? ' · ' + Number(p.square_footage).toLocaleString() + ' SF' : '') + (p.beds_baths ? ' · ' + esc(p.beds_baths) : '') + (p.term_months ? ' · ' + p.term_months + '-month term' : '') + '</div>';
 
     h += '<h2>Loan request</h2><div class="kpis">' +
-      kpi('Total loan', money(o.totalLoan), pct(o.LTC) + ' LTC · ' + pct(o.LTARV) + ' LTARV') +
-      kpi('Acquisition advance', money(o.acqAdvance), 'at closing') +
-      kpi('Construction holdback', money(o.holdback), 'drawn over the build') +
-      kpi('Borrower equity', money(o.equity), pct(o.equityPct) + ' of cost') +
+      kpi('Total loan', money(v.loan.total), pct(v.ltc) + ' LTC · ' + pct(v.ltarv) + ' LTARV') +
+      kpi('Acquisition advance', money(v.loan.acq), 'at closing') +
+      kpi('Construction holdback', money(v.loan.holdback), 'drawn over the build') +
+      kpi('Borrower equity', money(v.equity), pct(v.equityPct) + ' of cost') +
       '</div>';
 
-    h += '<h2>Project & returns</h2><div class="kpis">' +
-      kpi('Estimated ARV', money(o.ARV), '$' + Math.round(o.arvPerSf) + ' / SF') +
-      kpi('Total project cost', money(o.totalCost), pct(o.LTC) + ' LTC') +
-      kpi('Gross profit', money(o.grossProfit), pct(o.grossMargin) + ' of ARV') +
-      kpi('Net profit at sale', money(o.netProfit), pct(o.netMargin) + ' net margin') +
+    h += '<h2>Value & basis</h2><div class="kpis">' +
+      kpi('Estimated ARV', money(v.arv), '$' + Math.round(v.arvPerSf) + ' / SF') +
+      kpi('Purchase / as-is', money(v.purchase_price), '') +
+      kpi('Total construction budget', money(b.totalBudget), money(b.costPerSf) + '/SF') +
+      kpi('Total project cost', money(v.totalCost), 'all-in') +
       '</div>';
 
     var budget = divs.map(function (d) {
-      return '<tr><td>' + esc(d) + '</td><td class="n">' + money(o.divisions[d]) + '</td><td class="n">' + pct(o.hardCost ? o.divisions[d] / o.hardCost : 0) + '</td></tr>';
+      return '<tr><td>' + esc(d) + '</td><td class="n">' + money(b.divisions[d]) + '</td><td class="n">' + pct(b.hardCost ? b.divisions[d] / b.hardCost : 0) + '</td></tr>';
     }).join('');
     h += '<h2>Construction budget by division</h2><table><thead><tr><th>Division</th><th class="n">Amount</th><th class="n">% of budget</th></tr></thead><tbody>' + budget +
-      '<tr class="tot"><td>Hard construction costs</td><td class="n">' + money(o.hardCost) + '</td><td></td></tr>' +
-      '<tr><td>Contingency (' + pct(o.contRate, 0) + ')</td><td class="n">' + money(o.contingency) + '</td><td></td></tr>' +
-      '<tr class="tot"><td>Total construction budget</td><td class="n">' + money(o.totalBudget) + '</td><td class="n">' + money(o.costPerSf) + '/SF</td></tr>' +
+      '<tr class="tot"><td>Hard construction costs</td><td class="n">' + money(b.hardCost) + '</td><td></td></tr>' +
+      '<tr><td>Contingency (' + pct(b.contRate, 0) + ')</td><td class="n">' + money(b.contingency) + '</td><td></td></tr>' +
+      '<tr class="tot"><td>Total construction budget</td><td class="n">' + money(b.totalBudget) + '</td><td class="n">' + money(b.costPerSf) + '/SF</td></tr>' +
       '</tbody></table>';
 
-    var draws = o.draws.map(function (d) {
+    var draws = (v.draws || []).map(function (d) {
       return '<tr><td>Draw ' + d.n + '</td><td style="width:40%"><div class="bar"><i style="width:' + (d.amount / maxDraw * 100).toFixed(1) + '%"></i></div></td>' +
         '<td class="n">' + money(d.amount) + '</td><td class="n">' + pct(d.cumPct) + '</td></tr>';
     }).join('');
     h += '<h2>Draw schedule</h2><table><thead><tr><th>Draw</th><th></th><th class="n">Amount</th><th class="n">Cumulative</th></tr></thead><tbody>' + draws + '</tbody></table>';
 
-    var checks = o.rules.map(function (r) {
-      var v = (r.key === 'dumpster' || r.key === 'costSf' || r.key === 'draws') ? money(r.value) : pct(r.value);
-      return '<div class="chk ' + (r.pass ? 'ok' : 'bad') + '"><span class="dot">' + (r.pass ? '✓' : '!') + '</span>' + esc(r.label) + '<span class="cv">' + v + '</span></div>';
+    var checks = (v.checks || []).map(function (r) {
+      var val = (r.key === 'dumpster' || r.key === 'costSf' || r.key === 'draws') ? money(r.value) : pct(r.value);
+      return '<div class="chk ' + (r.pass ? 'ok' : 'bad') + '"><span class="dot">' + (r.pass ? '✓' : '!') + '</span>' + esc(r.label) + '<span class="cv">' + val + '</span></div>';
     }).join('');
-    h += '<h2>Underwriting checks — ' + o.rulesPass + ' of ' + o.rulesTotal + '</h2><div class="checks">' + checks + '</div>';
+    h += '<h2>Underwriting checks</h2><div class="checks">' + checks + '</div>';
 
     h += '<div class="toolbar"><button class="btn" onclick="window.print()">Print / Save PDF</button></div>';
     h += '<div class="foot">Prepared by Aterra Builders. Figures are modeled from the project budget and are for discussion; not a commitment to lend or an offer of terms.</div>';
