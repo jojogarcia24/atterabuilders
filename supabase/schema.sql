@@ -400,8 +400,12 @@ create table if not exists public.projects (
   documents        jsonb not null default '[]'::jsonb,
   -- schedule of real estate owned & track record
   reo              jsonb not null default '{"guarantor":"","section_a":[],"section_b":[],"section_c":[]}'::jsonb,
+  -- lenders this package is going to: [{ contact_id, status, date_sent, notes }]
+  lenders          jsonb not null default '[]'::jsonb,
   notes            text
 );
+-- Idempotent upgrade for projects created before lender-linking shipped.
+alter table public.projects add column if not exists lenders jsonb not null default '[]'::jsonb;
 create index if not exists projects_created_idx on public.projects(created_at desc);
 
 drop trigger if exists projects_touch_updated on public.projects;

@@ -290,6 +290,7 @@
             <button data-sec="deal" class="on">Deal &amp; Budget</button>
             <button data-sec="reo">REO &amp; Track Record</button>
             <button data-sec="docs">Documents</button>
+            <button data-sec="lenders">Lenders</button>
           </div>
           <div id="lp-sec-deal">
           <div class="card" style="padding:1.2rem 1.3rem;margin-bottom:1.2rem">
@@ -333,6 +334,20 @@
             <div class="card" style="padding:1.2rem 1.3rem">
               <div class="toolrow" style="margin-bottom:.6rem"><h3 style="margin:0">Document tracker</h3><button id="lp-doc-add" class="btn">Add document</button></div>
               <div class="tablescroll"><div id="lp-docs"></div></div>
+            </div>
+          </div>
+
+          <div id="lp-sec-lenders" style="display:none">
+            <div class="card" style="padding:1.2rem 1.3rem">
+              <div class="toolrow" style="margin-bottom:.6rem;flex-wrap:wrap;gap:.5rem">
+                <h3 style="margin:0">Lenders on this deal</h3>
+                <span style="display:flex;gap:.4rem;align-items:center">
+                  <select id="lp-lender-pick" style="padding:.45em .5em;border:1px solid var(--line,#dcdcd6);border-radius:6px;font:inherit;background:#fff"></select>
+                  <button id="lp-lender-add" class="btn">Attach lender</button>
+                </span>
+              </div>
+              <p class="sub" style="color:var(--muted);font-size:.8rem;margin:0 0 .6rem">Pick from your <strong>Contacts → Hard money lenders</strong>. Track where this package stands with each.</p>
+              <div class="tablescroll"><div id="lp-lenders"></div></div>
             </div>
           </div>
         </div>
@@ -385,13 +400,18 @@
       <div class="ct-bar">
         <div class="ct-seg" id="ct-filter">
           <button data-cat="all" class="on">All</button>
+          <button data-cat="preferred">★ Preferred</button>
           <button data-cat="lender">Hard money lenders</button>
           <button data-cat="contractor">Contractors &amp; trades</button>
           <button data-cat="other">Other</button>
         </div>
         <input id="ct-search" class="ct-search" type="search" placeholder="Search name, email, trade, notes…">
         <button id="ct-add" class="btn">+ Add contact</button>
+        <button id="ct-export" class="btn">Export CSV</button>
+        <button id="ct-import" class="btn">Import CSV</button>
+        <input id="ct-file" type="file" accept=".csv,text/csv" style="display:none">
       </div>
+      <p id="ct-msg" class="form-note" role="status" aria-live="polite" style="margin:-.4rem 0 1rem"></p>
 
       <form id="ct-form" class="ct-form" data-cat="lender">
         <input type="hidden" id="ct-id">
@@ -907,7 +927,8 @@
         { name: "Builder's risk insurance", responsible: '', status: 'Not started' },
         { name: 'GC license & certificate of insurance', responsible: 'GC', status: 'Not started' },
         { name: 'Appraisal', responsible: 'Lender', status: 'Not started' }
-      ]
+      ],
+      lenders: []
     };
   }
 
@@ -1227,8 +1248,48 @@
   }
   function lpRenderDocs() { lpGridRender('lp-docs', 'documents', DOC_COLS); }
   function lpShowSection(sec) {
-    ['deal', 'reo', 'docs'].forEach(function (s) { var el = $('#lp-sec-' + s); if (el) el.style.display = (s === sec) ? '' : 'none'; });
+    ['deal', 'reo', 'docs', 'lenders'].forEach(function (s) { var el = $('#lp-sec-' + s); if (el) el.style.display = (s === sec) ? '' : 'none'; });
     document.querySelectorAll('.lp-subnav button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-sec') === sec); });
+  }
+
+  // ---- lenders on this deal (references Contacts) ----
+  var LP_LENDER_STATUS = ['To send', 'Sent', 'In review', 'Term sheet', 'Approved', 'Declined', 'Passed'];
+  function lpLenders() { return current.project.lenders || (current.project.lenders = []); }
+  function lpContactById(id) { for (var i = 0; i < CONTACTS.length; i++) { if (CONTACTS[i].id === id) return CONTACTS[i]; } return null; }
+  function lpRenderLenders() {
+    if (!current || !current.project) return;
+    var attached = lpLenders();
+    var attachedIds = {}; attached.forEach(function (l) { attachedIds[l.contact_id] = 1; });
+    // picker: lender contacts not already attached
+    var avail = CONTACTS.filter(function (c) { return (c.category || '') === 'lender' && !attachedIds[c.id]; })
+      .sort(function (a, b) { return (a.company || '').localeCompare(b.company || ''); });
+    var pick = $('#lp-lender-pick');
+    if (pick) {
+      if (!CONTACTS.length) pick.innerHTML = '<option value="">— add lenders under Contacts first —</option>';
+      else if (!avail.length) pick.innerHTML = '<option value="">— all lenders attached —</option>';
+      else pick.innerHTML = '<option value="">— choose a lender —</option>' + avail.map(function (c) {
+        return '<option value="' + c.id + '">' + esc(c.company || c.contact_name || 'Lender') + (/prefer/i.test(c.status || '') ? ' ★' : '') + '</option>';
+      }).join('');
+    }
+    var box = $('#lp-lenders');
+    if (!box) return;
+    if (!attached.length) { box.innerHTML = '<div class="empty" style="padding:1rem">No lenders attached yet. Choose one above and click <strong>Attach lender</strong>.</div>'; return; }
+    var head = '<tr><th>Lender</th><th>Contact</th><th>Status</th><th>Date sent</th><th>Notes</th><th></th></tr>';
+    var rows = attached.map(function (l, i) {
+      var c = lpContactById(l.contact_id);
+      var name = c ? (c.company || c.contact_name || 'Lender') : '(removed contact)';
+      var sub = c ? [c.email, c.phone].filter(Boolean).join(' · ') : '';
+      var statusSel = '<select data-lk="status" data-li="' + i + '">' + LP_LENDER_STATUS.map(function (s) {
+        return '<option' + ((l.status || 'To send') === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') + '</select>';
+      return '<tr>' +
+        '<td><strong>' + esc(name) + '</strong>' + (c && /prefer/i.test(c.status || '') ? ' <span style="color:#1f5fb0">★</span>' : '') + '</td>' +
+        '<td style="color:var(--muted);font-size:.78rem">' + esc(sub) + '</td>' +
+        '<td>' + statusSel + '</td>' +
+        '<td><input type="date" data-lk="date_sent" data-li="' + i + '" value="' + esc(l.date_sent || '') + '"></td>' +
+        '<td><input type="text" data-lk="notes" data-li="' + i + '" value="' + esc(l.notes || '') + '" style="width:150px" placeholder="e.g. quoted 11%, 2 pts"></td>' +
+        '<td><button class="btn" data-lrm="' + i + '" style="padding:.2em .5em">✕</button></td></tr>';
+    }).join('');
+    box.innerHTML = '<table class="lp-bt"><thead>' + head + '</thead><tbody>' + rows + '</tbody></table>';
   }
 
   function lpRecompute() {
@@ -1256,6 +1317,7 @@
     lpRenderBudget();
     lpRenderReo();
     lpRenderDocs();
+    lpRenderLenders();
     lpShowSection('deal');
     lpRecompute();
     $('#lp-editor').style.display = 'grid';
@@ -1279,6 +1341,10 @@
       var arr = lpArr(el.getAttribute('data-gp')); var gi = +el.getAttribute('data-gi'); var gk = el.getAttribute('data-gk');
       if (arr[gi]) { arr[gi][gk] = el.type === 'number' ? lnum(el.value) : el.value; current.dirty = true; }
     }
+    else if (el.hasAttribute('data-lk')) {
+      var la = lpLenders(); var li = +el.getAttribute('data-li');
+      if (la[li]) { la[li][el.getAttribute('data-lk')] = el.value; current.dirty = true; }
+    }
     else if (el.hasAttribute('data-line')) {
       var ln = current.lines[+el.getAttribute('data-line')]; if (!ln) return;
       var c = el.getAttribute('data-col');
@@ -1291,7 +1357,7 @@
     var keys = ['name', 'status', 'address', 'borrower', 'scope', 'square_footage', 'stories',
       'beds_baths', 'lot_size', 'term_months', 'start_date', 'completion_date', 'purchase_price',
       'closing_costs', 'arv_per_sf', 'interest_rate', 'points_pct', 'admin_fee', 'contingency_rate',
-      'selling_cost_pct', 'escrow_interest', 'rules', 'capital', 'documents', 'reo', 'notes'];
+      'selling_cost_pct', 'escrow_interest', 'rules', 'capital', 'documents', 'reo', 'lenders', 'notes'];
     var o = {};
     keys.forEach(function (k) { if (p[k] !== undefined) o[k] = p[k]; });
     ['square_footage', 'stories', 'term_months', 'purchase_price', 'closing_costs', 'arv_per_sf',
@@ -1316,6 +1382,7 @@
       if (!p.capital) p.capital = lpDefault().capital;
       if (!p.reo) p.reo = { guarantor: '', section_a: [], section_b: [], section_c: [] };
       if (!p.documents) p.documents = [];
+      if (!Array.isArray(p.lenders)) p.lenders = [];
       current = { isNew: false, dirty: false, project: p, lines: res[1] || [] };
       lpRenderEditor(); note($('#lp-note'), '', '');
     }).catch(function () { note($('#lp-note'), 'Could not load project.', 'err'); });
@@ -1486,6 +1553,13 @@
     var sec = t.closest ? t.closest('[data-sec]') : null;
     if (sec) { lpShowSection(sec.getAttribute('data-sec')); return; }
     if (t.id === 'lp-doc-add') { (current.project.documents = current.project.documents || []).push({ status: 'Not started' }); lpRenderDocs(); current.dirty = true; return; }
+    if (t.id === 'lp-lender-add') {
+      var id = $('#lp-lender-pick').value; if (!id) { note($('#lp-note'), 'Choose a lender to attach.', 'err'); return; }
+      lpLenders().push({ contact_id: id, status: 'To send', date_sent: '', notes: '' });
+      current.dirty = true; lpRenderLenders(); return;
+    }
+    var lrm = t.closest ? t.closest('[data-lrm]') : null;
+    if (lrm) { lpLenders().splice(+lrm.getAttribute('data-lrm'), 1); current.dirty = true; lpRenderLenders(); return; }
     var add = t.closest ? t.closest('[data-add]') : null;
     if (add) { var m = { a: 'section_a', b: 'section_b', c: 'section_c' }[add.getAttribute('data-add')]; if (m) { lpArr(m).push({}); lpRenderReo(); current.dirty = true; } return; }
     var grm = t.closest ? t.closest('[data-grm]') : null;
@@ -1509,6 +1583,8 @@
       CONTACTS = rows || [];
       $('#c-contacts').textContent = CONTACTS.length;
       renderContacts();
+      // if a loan package is open, its lender picker/table depends on CONTACTS
+      if (current && current.project && typeof lpRenderLenders === 'function') lpRenderLenders();
     }).catch(fail);
   }
 
@@ -1532,15 +1608,17 @@
   function renderContacts() {
     var box = $('#ct-box');
     var q = ctQuery.toLowerCase();
+    var pref = ctFilter === 'preferred';
     var rows = CONTACTS.filter(function (c) {
-      if (ctFilter !== 'all' && (c.category || 'other') !== ctFilter) return false;
+      if (pref) { if (!/prefer/i.test(c.status || '')) return false; }
+      else if (ctFilter !== 'all' && (c.category || 'other') !== ctFilter) return false;
       if (!q) return true;
       return [c.company, c.contact_name, c.email, c.phone, c.trade, c.market, c.notes, c.status].some(function (v) { return (v || '').toString().toLowerCase().indexOf(q) > -1; });
     });
     if (!CONTACTS.length) { box.innerHTML = '<div class="empty">No contacts yet. Click <strong>+ Add contact</strong> to start your rolodex.</div>'; return; }
-    if (!rows.length) { box.innerHTML = '<div class="empty">No contacts match that filter or search.</div>'; return; }
+    if (!rows.length) { box.innerHTML = '<div class="empty">' + (pref ? 'No contacts are marked <strong>Preferred</strong> yet. Edit a contact and set its status to Preferred.' : 'No contacts match that filter or search.') + '</div>'; return; }
 
-    var groups = ctFilter === 'all' ? CT_GROUPS : CT_GROUPS.filter(function (g) { return g.cat === ctFilter; });
+    var groups = (ctFilter === 'all' || pref) ? CT_GROUPS : CT_GROUPS.filter(function (g) { return g.cat === ctFilter; });
     var html = '';
     groups.forEach(function (g) {
       var gr = rows.filter(function (c) { return (c.category || 'other') === g.cat; });
@@ -1648,6 +1726,132 @@
       else { r.text().then(function (t) { note($('#ct-note'), 'Could not save: ' + t.slice(0, 120), 'err'); }); }
     }).catch(function () { note($('#ct-note'), 'Network error.', 'err'); })
       .finally(function () { btn.disabled = false; });
+  });
+
+  // ---- CSV export / import ----
+  var CT_CSV_COLS = ['category','company','contact_name','title','email','phone','website','instagram','status','trade','address','market','loan_type','ltv_ltc','rate','points_fees','term','close_time','last_contacted','notes'];
+  var CT_CSV_HEAD = ['Type','Company','Contact Name','Title','Email','Phone','Website','Instagram','Status','Trade','Address','Market / States','Loan Type / Program','Typical LTV / LTC','Rate','Points / Fees','Term','Typical Close Time','Last Contacted','Notes'];
+  function csvCell(v) { v = v == null ? '' : String(v); return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+
+  $('#ct-export').addEventListener('click', function () {
+    // export what's currently in view (respects the filter + search)
+    var q = ctQuery.toLowerCase(), pref = ctFilter === 'preferred';
+    var rows = CONTACTS.filter(function (c) {
+      if (pref) { if (!/prefer/i.test(c.status || '')) return false; }
+      else if (ctFilter !== 'all' && (c.category || 'other') !== ctFilter) return false;
+      if (!q) return true;
+      return [c.company, c.contact_name, c.email, c.phone, c.trade, c.market, c.notes, c.status].some(function (v) { return (v || '').toString().toLowerCase().indexOf(q) > -1; });
+    });
+    if (!rows.length) { note($('#ct-msg'), 'Nothing to export in this view.', 'err'); ctShowForm(false); return; }
+    var lines = [CT_CSV_HEAD.join(',')];
+    rows.forEach(function (c) { lines.push(CT_CSV_COLS.map(function (k) { return csvCell(c[k]); }).join(',')); });
+    var blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'aterra-contacts' + (ctFilter === 'all' ? '' : '-' + ctFilter) + '.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  });
+
+  // header label -> db field (tolerant of the spreadsheet's wording)
+  function ctMapHeader(h) {
+    var n = String(h || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    var map = {
+      type: 'category', category: 'category',
+      lendercompany: 'company', company: 'company', companyname: 'company', lender: 'company', name: 'company',
+      contactname: 'contact_name', contact: 'contact_name', owner: 'contact_name',
+      title: 'title', role: 'title',
+      email: 'email', emailforbids: 'email', bids: 'email',
+      phone: 'phone', phonenumber: 'phone', cell: 'phone',
+      website: 'website', web: 'website', url: 'website',
+      instagram: 'instagram', ig: 'instagram',
+      status: 'status',
+      trade: 'trade', tradetype: 'trade',
+      address: 'address', location: 'address',
+      marketstates: 'market', market: 'market', states: 'market',
+      loantypeprogram: 'loan_type', loantype: 'loan_type', program: 'loan_type',
+      typicalltvltc: 'ltv_ltc', ltvltc: 'ltv_ltc', ltv: 'ltv_ltc', ltc: 'ltv_ltc',
+      rate: 'rate', interestrate: 'rate',
+      pointsfees: 'points_fees', points: 'points_fees', fees: 'points_fees',
+      term: 'term',
+      typicalclosetime: 'close_time', closetime: 'close_time', close: 'close_time',
+      lastcontacted: 'last_contacted', lastcontact: 'last_contacted',
+      notes: 'notes', note: 'notes'
+    };
+    return map[n] || null;
+  }
+  // RFC-4180-ish CSV parser: handles quotes, escaped quotes, commas & newlines in fields
+  function parseCsv(text) {
+    text = text.replace(/^﻿/, '');
+    var rows = [], row = [], field = '', i = 0, inQ = false, ch;
+    while (i < text.length) {
+      ch = text[i];
+      if (inQ) {
+        if (ch === '"') { if (text[i + 1] === '"') { field += '"'; i += 2; continue; } inQ = false; i++; continue; }
+        field += ch; i++; continue;
+      }
+      if (ch === '"') { inQ = true; i++; continue; }
+      if (ch === ',') { row.push(field); field = ''; i++; continue; }
+      if (ch === '\r') { i++; continue; }
+      if (ch === '\n') { row.push(field); rows.push(row); row = []; field = ''; i++; continue; }
+      field += ch; i++;
+    }
+    if (field !== '' || row.length) { row.push(field); rows.push(row); }
+    return rows.filter(function (r) { return r.some(function (c) { return String(c).trim() !== ''; }); });
+  }
+  function ctNormCat(v) {
+    var n = String(v || '').toLowerCase();
+    if (/contract|trade|sub/.test(n)) return 'contractor';
+    if (/lend|hard money|capital|funding|bank/.test(n)) return 'lender';
+    if (/other/.test(n)) return 'other';
+    return null;
+  }
+  function ctNormDate(v) {
+    v = String(v || '').trim(); if (!v) return null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+    var d = new Date(v); if (isNaN(d.getTime())) return null;
+    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  }
+
+  $('#ct-import').addEventListener('click', function () { $('#ct-file').click(); });
+  $('#ct-file').addEventListener('change', function (e) {
+    var f = e.target.files && e.target.files[0]; if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var grid = parseCsv(String(reader.result));
+        if (grid.length < 2) { note($('#ct-msg'), 'That CSV has no data rows.', 'err'); return; }
+        var headers = grid[0].map(ctMapHeader);
+        if (headers.every(function (h) { return !h; })) { note($('#ct-msg'), 'Could not recognize any columns. Include headers like Company, Email, Phone, Status.', 'err'); return; }
+        // default category: explicit column wins; else the current filter if specific; else infer/lender
+        var fallbackCat = (ctFilter === 'lender' || ctFilter === 'contractor' || ctFilter === 'other') ? ctFilter : null;
+        var payload = [];
+        for (var r = 1; r < grid.length; r++) {
+          var rec = {}, any = false;
+          headers.forEach(function (field, ci) {
+            if (!field) return;
+            var val = (grid[r][ci] || '').trim(); if (!val) return;
+            if (field === 'category') { var nc = ctNormCat(val); if (nc) { rec.category = nc; any = true; } return; }
+            if (field === 'last_contacted') { var dd = ctNormDate(val); if (dd) rec.last_contacted = dd; return; }
+            rec[field] = val; any = true;
+          });
+          if (!any || (!rec.company && !rec.contact_name)) continue;
+          if (!rec.category) rec.category = rec.trade ? 'contractor' : (fallbackCat || 'lender');
+          if (!rec.status) rec.status = 'Active';
+          payload.push(rec);
+        }
+        if (!payload.length) { note($('#ct-msg'), 'No importable rows found (each needs a company or contact name).', 'err'); return; }
+        note($('#ct-msg'), 'Importing ' + payload.length + ' contact' + (payload.length > 1 ? 's' : '') + '…');
+        api('contacts', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: JSON.stringify(payload) })
+          .then(function (rr) {
+            if (rr.ok) { note($('#ct-msg'), 'Imported ' + payload.length + ' contact' + (payload.length > 1 ? 's' : '') + '.', 'ok'); loadContacts(); }
+            else { rr.text().then(function (t) { note($('#ct-msg'), 'Import failed: ' + t.slice(0, 140), 'err'); }); }
+          }).catch(function () { note($('#ct-msg'), 'Network error during import.', 'err'); });
+      } catch (err) { note($('#ct-msg'), 'Could not read that CSV.', 'err'); }
+      finally { e.target.value = ''; }
+    };
+    reader.onerror = function () { note($('#ct-msg'), 'Could not read the file.', 'err'); e.target.value = ''; };
+    reader.readAsText(f);
   });
 
   // ---- start ----
