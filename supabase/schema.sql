@@ -432,3 +432,22 @@ create policy projects_admin_all on public.projects
 drop policy if exists pbl_admin_all on public.project_budget_lines;
 create policy pbl_admin_all on public.project_budget_lines
   for all using ( is_admin() ) with check ( is_admin() );
+
+-- Shareable read-only lender links (magic-link tokens). Admins manage rows via
+-- RLS; the public package page reads through a service-role function so the
+-- table itself is never exposed to anon.
+create table if not exists public.loan_share_links (
+  id             uuid primary key default gen_random_uuid(),
+  token          text unique not null,
+  project_id     uuid not null references public.projects(id) on delete cascade,
+  label          text,
+  active         boolean not null default true,
+  view_count     integer not null default 0,
+  last_viewed_at timestamptz,
+  created_at     timestamptz not null default now()
+);
+create index if not exists loan_share_links_token_idx on public.loan_share_links(token);
+alter table public.loan_share_links enable row level security;
+drop policy if exists lsl_admin_all on public.loan_share_links;
+create policy lsl_admin_all on public.loan_share_links
+  for all using ( is_admin() ) with check ( is_admin() );

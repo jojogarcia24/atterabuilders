@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Construction Loan Package · Aterra Builders</title>
+<style>
+  :root { --navy:#1f3864; --navy2:#2f4a6d; --ltblue:#dce6f1; --ink:#1a1a1a; --muted:#6b6f76; --line:#e7e7e2; --bg:#f5f4f1; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif; color:var(--ink); background:var(--bg); }
+  .wrap { max-width:900px; margin:0 auto; padding:0 20px 60px; }
+  .lh { background:var(--navy); color:#fff; padding:26px 24px; margin:0 -20px 22px; }
+  .lh .brand { font-size:22px; letter-spacing:3px; font-weight:700; }
+  .lh .doc { font-size:12px; letter-spacing:1px; text-transform:uppercase; color:#c9d4e6; margin-top:4px; }
+  h1 { font-size:22px; margin:20px 0 2px; }
+  .sub { color:var(--muted); font-size:14px; margin-bottom:8px; }
+  h2 { font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--navy2); border-bottom:2px solid var(--ltblue); padding-bottom:5px; margin:28px 0 12px; }
+  .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  .kpi { border:1px solid var(--line); border-radius:10px; padding:12px 14px; background:#fff; }
+  .kpi .k { font-size:10px; text-transform:uppercase; letter-spacing:.4px; color:var(--muted); }
+  .kpi .v { font-size:19px; font-weight:700; margin-top:4px; }
+  .kpi .s { font-size:11px; color:var(--muted); margin-top:2px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; background:#fff; }
+  td, th { padding:7px 8px; text-align:left; }
+  th { font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:var(--muted); border-bottom:1px solid var(--line); }
+  td.n, th.n { text-align:right; font-variant-numeric:tabular-nums; }
+  tbody tr { border-bottom:1px solid #f0f0ec; }
+  .divrow td { background:var(--ltblue); color:var(--navy); font-weight:700; }
+  .tot td { border-top:2px solid var(--navy); font-weight:700; }
+  .checks { display:grid; gap:6px; }
+  .chk { display:flex; align-items:center; gap:9px; font-size:14px; padding:8px 10px; border-radius:8px; background:#fff; border:1px solid var(--line); }
+  .chk .dot { width:18px;height:18px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700; }
+  .chk.ok .dot { background:#1c6b2c; } .chk.bad .dot { background:#c0402f; }
+  .chk .cv { margin-left:auto; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .bar { background:#fff; border:1px solid var(--line); border-radius:8px; height:12px; overflow:hidden; }
+  .bar > i { display:block; height:100%; background:#3f6f52; }
+  .toolbar { display:flex; justify-content:flex-end; margin:14px 0 0; }
+  .btn { border:1px solid var(--navy); background:var(--navy); color:#fff; padding:.5em 1em; border-radius:8px; font:inherit; font-size:13px; cursor:pointer; }
+  .msg { text-align:center; padding:80px 20px; color:var(--muted); }
+  .foot { margin-top:32px; padding-top:12px; border-top:1px solid var(--line); font-size:11px; color:var(--muted); }
+  @media (max-width:640px){ .kpis{grid-template-columns:1fr 1fr;} }
+  @media print { body{background:#fff;} .toolbar{display:none;} .lh{margin:0 0 16px;} }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="lh"><div class="brand">ATERRA BUILDERS</div><div class="doc">Construction Loan Package</div></div>
+    <div id="app"><div class="msg">Loading package…</div></div>
+  </div>
+
+<script>
+(function () {
+  var app = document.getElementById('app');
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[<>&"]/g, function (c) { return ({ '<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;' }[c]); }); };
+  var money = function (n) { n = Math.round(Number(n) || 0); return (n < 0 ? '-$' : '$') + Math.abs(n).toLocaleString(); };
+  var pct = function (n, d) { return ((Number(n) || 0) * 100).toFixed(d == null ? 1 : d) + '%'; };
+
+  var key = (new URLSearchParams(location.search)).get('key');
+  if (!key) { app.innerHTML = '<div class="msg">This link is missing its access key.</div>'; return; }
+
+  fetch('/.netlify/functions/package-view?key=' + encodeURIComponent(key))
+    .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+    .then(function (res) {
+      if (!res.ok) throw new Error(res.j.error || 'This link is not available.');
+      render(res.j.view);
+    })
+    .catch(function (e) { app.innerHTML = '<div class="msg">' + esc(e.message) + '</div>'; });
+
+  function kpi(k, v, s) { return '<div class="kpi"><div class="k">' + k + '</div><div class="v">' + v + '</div>' + (s ? '<div class="s">' + s + '</div>' : '') + '</div>'; }
+
+  function render(v) {
+    var p = v.property || {};
+    var b = v.budget || { divisions: {} };
+    var divs = Object.keys(b.divisions).sort();
+    var maxDraw = Math.max.apply(null, (v.draws || []).map(function (d) { return d.amount; }).concat([1]));
+
+    var h = '';
+    h += '<h1>' + esc(p.address || p.name || 'Construction Loan Request') + '</h1>';
+    h += '<div class="sub">' + esc(p.scope || '') + (p.square_footage ? ' · ' + Number(p.square_footage).toLocaleString() + ' SF' : '') + (p.beds_baths ? ' · ' + esc(p.beds_baths) : '') + (p.term_months ? ' · ' + p.term_months + '-month term' : '') + '</div>';
+
+    h += '<h2>Loan request</h2><div class="kpis">' +
+      kpi('Total loan', money(v.loan.total), pct(v.ltc) + ' LTC · ' + pct(v.ltarv) + ' LTARV') +
+      kpi('Acquisition advance', money(v.loan.acq), 'at closing') +
+      kpi('Construction holdback', money(v.loan.holdback), 'drawn over the build') +
+      kpi('Borrower equity', money(v.equity), pct(v.equityPct) + ' of cost') +
+      '</div>';
+
+    h += '<h2>Value & basis</h2><div class="kpis">' +
+      kpi('Estimated ARV', money(v.arv), '$' + Math.round(v.arvPerSf) + ' / SF') +
+      kpi('Purchase / as-is', money(v.purchase_price), '') +
+      kpi('Total construction budget', money(b.totalBudget), money(b.costPerSf) + '/SF') +
+      kpi('Total project cost', money(v.totalCost), 'all-in') +
+      '</div>';
+
+    var budget = divs.map(function (d) {
+      return '<tr><td>' + esc(d) + '</td><td class="n">' + money(b.divisions[d]) + '</td><td class="n">' + pct(b.hardCost ? b.divisions[d] / b.hardCost : 0) + '</td></tr>';
+    }).join('');
+    h += '<h2>Construction budget by division</h2><table><thead><tr><th>Division</th><th class="n">Amount</th><th class="n">% of budget</th></tr></thead><tbody>' + budget +
+      '<tr class="tot"><td>Hard construction costs</td><td class="n">' + money(b.hardCost) + '</td><td></td></tr>' +
+      '<tr><td>Contingency (' + pct(b.contRate, 0) + ')</td><td class="n">' + money(b.contingency) + '</td><td></td></tr>' +
+      '<tr class="tot"><td>Total construction budget</td><td class="n">' + money(b.totalBudget) + '</td><td class="n">' + money(b.costPerSf) + '/SF</td></tr>' +
+      '</tbody></table>';
+
+    var draws = (v.draws || []).map(function (d) {
+      return '<tr><td>Draw ' + d.n + '</td><td style="width:40%"><div class="bar"><i style="width:' + (d.amount / maxDraw * 100).toFixed(1) + '%"></i></div></td>' +
+        '<td class="n">' + money(d.amount) + '</td><td class="n">' + pct(d.cumPct) + '</td></tr>';
+    }).join('');
+    h += '<h2>Draw schedule</h2><table><thead><tr><th>Draw</th><th></th><th class="n">Amount</th><th class="n">Cumulative</th></tr></thead><tbody>' + draws + '</tbody></table>';
+
+    var checks = (v.checks || []).map(function (r) {
+      var val = (r.key === 'dumpster' || r.key === 'costSf' || r.key === 'draws') ? money(r.value) : pct(r.value);
+      return '<div class="chk ' + (r.pass ? 'ok' : 'bad') + '"><span class="dot">' + (r.pass ? '✓' : '!') + '</span>' + esc(r.label) + '<span class="cv">' + val + '</span></div>';
+    }).join('');
+    h += '<h2>Underwriting checks</h2><div class="checks">' + checks + '</div>';
+
+    h += '<div class="toolbar"><button class="btn" onclick="window.print()">Print / Save PDF</button></div>';
+    h += '<div class="foot">Prepared by Aterra Builders. Figures are modeled from the project budget and are for discussion; not a commitment to lend or an offer of terms.</div>';
+
+    app.innerHTML = h;
+  }
+})();
+</script>
+</body>
+</html>
