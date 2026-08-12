@@ -268,6 +268,7 @@
           <option value="capital">Capital partners sheet</option>
           <option value="budget">Budget &amp; draw schedule</option>
         </select>
+        <button id="lp-xls" class="btn">Export Excel</button>
         <button id="lp-del" class="btn" style="margin-left:auto">Delete</button>
         <p id="lp-note" class="form-note" role="status" aria-live="polite" style="width:100%;margin:.2rem 0 0"></p>
       </div>
@@ -1157,8 +1158,32 @@
       .then(function () { current = null; $('#lp-editor').style.display = 'none'; note($('#lp-note'), 'Deleted.', 'ok'); loadProjects(); });
   }
 
+  function lpExport() {
+    if (!current || !current.project) return;
+    if (current.isNew || !current.project.id) { note($('#lp-note'), 'Save the project first, then export.', 'err'); return; }
+    if (current.dirty && !window.confirm('You have unsaved edits. Export the last saved version?')) return;
+    var btn = $('#lp-xls'); btn.disabled = true; note($('#lp-note'), 'Building Excel…');
+    fetch(FN + 'loan-export', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (session && session.access_token) },
+      body: JSON.stringify({ project_id: current.project.id })
+    }).then(function (r) {
+      if (!r.ok) return r.json().then(function (j) { throw new Error(j.error || 'export failed'); });
+      return r.blob();
+    }).then(function (blob) {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = (current.project.name || 'loan-package').replace(/[^a-z0-9\-_. ]/gi, '').trim() + '.xlsx';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+      note($('#lp-note'), 'Excel downloaded.', 'ok');
+    }).catch(function (e) { note($('#lp-note'), 'Could not export: ' + e.message, 'err'); })
+      .finally(function () { btn.disabled = false; });
+  }
+
   // wire the loan-package controls once
   $('#lp-picker').addEventListener('change', function () { lpSelect(this.value); });
+  $('#lp-xls').addEventListener('click', lpExport);
   $('#lp-new').addEventListener('click', lpNew);
   $('#lp-dup').addEventListener('click', lpDuplicate);
   $('#lp-save').addEventListener('click', lpSave);
