@@ -167,10 +167,41 @@
       binding: binding, maxAcqAvail: maxAcqAvail, minDown: minDown,
       draws: drawRows, drawTotal: drawTotal, drawVariance: drawVariance,
       rules: rulesOut, rulesPass: rulesPass, rulesTotal: rulesOut.length,
+      sellPct: sellPct,
       // balance check: sources (loan + equity) less uses must be ~0
       balance: (totalLoan + equity) - totalCost
     };
   }
 
-  root.LoanCalc = { compute: compute };
+  // Capital-partner economics — layered on top of a compute() result.
+  function capital(o, c) {
+    c = c || {};
+    var np = num(c.num_partners, 2), cpp = num(c.capital_per_partner, 300000),
+        wc = num(c.working_capital, 130000), hold = num(c.hold_months, 10),
+        ownEach = num(c.ownership_per_capital, 0.125), ops = num(c.operating_partners, 3);
+    var raised = np * cpp;
+    var cashNeed = o.equity + wc;                 // partnership funds equity + draw float
+    var capOwnTotal = np * ownEach;
+    var opOwnTotal = 1 - capOwnTotal;
+    var opEach = ops > 0 ? opOwnTotal / ops : 0;
+    var profitPerCap = o.netProfit * ownEach;
+    var roc = cpp ? profitPerCap / cpp : 0;
+    var factors = [1.05, 1.0, 0.95, 0.90, 0.85];
+    var downside = factors.map(function (f) {
+      var psf = o.arvPerSf * f;
+      var netP = (psf * o.SF) * (1 - o.sellPct) - o.totalCost;
+      return { psf: psf, sale: psf * o.SF, netProfit: netP,
+               perCapital: netP * ownEach, roc: cpp ? (netP * ownEach) / cpp : 0, base: f === 1.0 };
+    });
+    return {
+      np: np, cpp: cpp, wc: wc, hold: hold, ops: ops, ownEach: ownEach,
+      raised: raised, cashNeed: cashNeed, surplus: raised - cashNeed,
+      capOwnTotal: capOwnTotal, opOwnTotal: opOwnTotal, opEach: opEach,
+      profitPerCap: profitPerCap, roc: roc, annual: hold ? roc * 12 / hold : 0,
+      profitPerOp: o.netProfit * opEach, seniorLoan: o.totalLoan,
+      breakEvenPsf: o.SF ? o.breakEven / o.SF : 0, downside: downside
+    };
+  }
+
+  root.LoanCalc = { compute: compute, capital: capital };
 })(typeof window !== 'undefined' ? window : this);
