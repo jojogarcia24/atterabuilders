@@ -263,8 +263,8 @@ async function aiExtract(text) {
       headers: { 'x-api-key': AI_KEY, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: AI_MODEL, max_tokens: 8000,
-        system: 'You are a data-extraction tool. Respond with a single raw JSON object only — no prose, no explanation, and no markdown code fences.',
-        messages: [{ role: 'user', content: prompt }, { role: 'assistant', content: '{' }]
+        system: 'You are a data-extraction tool. Respond with a single raw JSON object only, starting with "{" — no prose, no explanation, and no markdown code fences.',
+        messages: [{ role: 'user', content: prompt }]
       })
     });
     if (!res.ok) {
@@ -274,10 +274,10 @@ async function aiExtract(text) {
       return { data: null, diag: 'the API returned ' + res.status + ' for model "' + AI_MODEL + '"' + (detail ? ': ' + detail : '') + '.' };
     }
     const data = await res.json();
-    // gather every text block (the reply was prefilled with "{", so prepend it)
-    let txt = '{' + (Array.isArray(data.content)
+    // gather every text block from the reply
+    let txt = Array.isArray(data.content)
       ? data.content.filter(function (c) { return c && c.type === 'text' && typeof c.text === 'string'; }).map(function (c) { return c.text; }).join('')
-      : '');
+      : '';
     txt = txt.replace(/```(?:json)?/gi, '').trim();      // strip any stray code fences
     const obj = extractJsonObject(txt);
     if (!obj) {
