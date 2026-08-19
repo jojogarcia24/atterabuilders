@@ -1,8 +1,14 @@
 # Aterra Builders — Netlify configuration
 # Static site (repo root) + one serverless function for engagement tracking.
 
+# `publish = "."` served the repository itself — including the serverless function
+# sources under netlify/functions, which are .js files sitting in the tree. The
+# build script is an explicit allow-list of what this site serves; see
+# scripts/netlify-build.sh. `functions` resolves against the repo root rather
+# than the publish directory, so the functions themselves are unaffected.
 [build]
-  publish = "."
+  publish = "dist"
+  command = "bash scripts/netlify-build.sh dist"
   functions = "netlify/functions"
 
 # These keys are PUBLIC by design (client-side Supabase anon key, project URL,
