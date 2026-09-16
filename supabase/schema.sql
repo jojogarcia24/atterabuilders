@@ -457,15 +457,15 @@ create policy lsl_admin_all on public.loan_share_links
   for all using ( is_admin() ) with check ( is_admin() );
 
 -- ================================================================
--- CONTACTS — rolodex for lenders, contractors & trades, and others.
+-- CONTACTS — rolodex for lenders, contractors & trades, vendors, and others.
 -- One flexible table; category-specific columns (rate/points/LTV for
--- lenders; trade/address for contractors) coexist and are shown per row.
+-- lenders; trade/address for contractors and vendors) coexist and are shown per row.
 -- ================================================================
 create table if not exists public.contacts (
   id            uuid primary key default gen_random_uuid(),
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now(),
-  category      text not null default 'lender',   -- 'lender' | 'contractor' | 'other'
+  category      text not null default 'lender',   -- 'lender' | 'contractor' | 'vendor' | 'other'
   company       text,                              -- Lender / Company name
   contact_name  text,
   title         text,                              -- e.g. Owner, Account Exec
