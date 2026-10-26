@@ -45,6 +45,12 @@
   to = "/.netlify/functions/invest-api/list?action=list"
   status = 200
 
+# Voss adds people to the admin Contacts rolodex (same shared secret as above).
+[[redirects]]
+  from = "/api/contacts-add"
+  to = "/.netlify/functions/contacts-api"
+  status = 200
+
 # Section-dwell engagement beacon from the private investor deck. Fires the
 # "going deep" Voss alert once a recipient crosses the warm/hot thresholds.
 [[redirects]]
