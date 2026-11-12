@@ -227,6 +227,18 @@
         [data-panel="loans"] .lp-kpi .s{font-size:.72rem;color:var(--muted);margin-top:.1rem}
         [data-panel="loans"] .lp-kpi.good{border-color:#bfe0c6;background:#f4faf5}
         [data-panel="loans"] .lp-kpi.good .v{color:#1c6b2c}
+        [data-panel="loans"] .lp-kpi.bad{border-color:#f0c9c2;background:#fdf6f5}
+        [data-panel="loans"] .lp-kpi.bad .v{color:#c0402f}
+        [data-panel="loans"] .lp-kpi.hl{border-color:#cdd9ea;background:#f5f8fc}
+        [data-panel="loans"] .lp-tbl{width:100%;border-collapse:collapse;font-size:.82rem;font-variant-numeric:tabular-nums;background:#fff;border:1px solid var(--line,#e7e7e2);border-radius:10px;overflow:hidden}
+        [data-panel="loans"] .lp-tbl td,[data-panel="loans"] .lp-tbl th{padding:.42em .7em;border-bottom:1px solid var(--line,#f0f0ec);text-align:right}
+        [data-panel="loans"] .lp-tbl td:first-child,[data-panel="loans"] .lp-tbl th:first-child{text-align:left}
+        [data-panel="loans"] .lp-tbl th{font-size:.64rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700;background:#faf9f6}
+        [data-panel="loans"] .lp-tbl tr.tot td{font-weight:700;background:#faf9f6}
+        [data-panel="loans"] .lp-tbl tr.neg td{color:#c0402f}
+        [data-panel="loans"] .lp-tbl4{font-size:.78rem}
+        [data-panel="loans"] .lp-sub{font-size:.76rem;color:var(--muted);margin:-.2rem 0 .5rem}
+        [data-panel="loans"] .lp-hint{font-size:.8rem;color:#8a6d1c;background:#fbf3e2;border-radius:8px;padding:.6em .75em}
         [data-panel="loans"] .lp-sec{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;margin:1.05rem 0 .5rem}
         [data-panel="loans"] .lp-gauge{margin:.5rem 0}
         [data-panel="loans"] .lp-gauge .gl{display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.28rem}
@@ -265,7 +277,8 @@
         [data-panel="loans"] .lp-ptable{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:.3rem}
         [data-panel="loans"] .lp-ptable th{text-align:left;color:var(--muted);font-size:.72rem;font-weight:700;padding:.3em .35em;border-bottom:1px solid var(--line,#e7e7e2)}
         [data-panel="loans"] .lp-ptable td{padding:.32em .35em;border-bottom:1px solid var(--line,#f0f0ec);font-variant-numeric:tabular-nums}
-        @media(max-width:900px){[data-panel="loans"] #lp-editor{grid-template-columns:1fr}[data-panel="loans"] .lp-cols,[data-panel="loans"] .lp-grid,[data-panel="loans"] .lp-kpis{grid-template-columns:1fr}}
+        [data-panel="loans"] #lp-editor > *{min-width:0}
+        @media(max-width:900px){[data-panel="loans"] #lp-editor{grid-template-columns:minmax(0,1fr)}[data-panel="loans"] .lp-cols,[data-panel="loans"] .lp-grid,[data-panel="loans"] .lp-kpis{grid-template-columns:1fr}}
       </style>
       <div class="toolrow">
         <h2>Loan Packages</h2>
@@ -306,6 +319,11 @@
           <div class="card" style="padding:1.2rem 1.3rem;margin-bottom:1.2rem">
             <h3 style="margin:0 0 .8rem">Deal inputs &amp; thresholds</h3>
             <div class="lp-grid" id="lp-in"></div>
+          </div>
+          <div class="card" style="padding:1.2rem 1.3rem;margin-bottom:1.2rem">
+            <h3 style="margin:0 0 .3rem">Holding costs</h3>
+            <p style="margin:0 0 .8rem;color:var(--muted);font-size:.8rem">What you pay to hold the property during the build, out of pocket (not covered by the loan). Spread over the loan term.</p>
+            <div class="lp-grid" id="lp-hold"></div>
           </div>
           <div class="card" style="padding:1.2rem 1.3rem;margin-bottom:1.2rem">
             <h3 style="margin:0 0 .8rem">Capital partners</h3>
@@ -933,7 +951,7 @@
     { k: 'points_pct', label: 'Lender points', type: 'pct' },
     { k: 'admin_fee', label: 'Admin / doc fee ($)', type: 'money' },
     { k: 'contingency_rate', label: 'Contingency rate', type: 'pct' },
-    { k: 'selling_cost_pct', label: 'Selling cost (of ARV)', type: 'pct' },
+    { k: 'selling_cost_pct', label: 'Selling cost (of ARV) — TX typical 5–7%', type: 'pct' },
     { k: 'escrow_interest', label: 'Escrow interest at closing?', type: 'bool' }
   ];
   var LP_RULES = [
@@ -941,6 +959,15 @@
     { k: 'max_ltarv', label: 'Max LTARV', type: 'pct', rule: true },
     { k: 'min_margin', label: 'Min gross margin', type: 'pct', rule: true },
     { k: 'min_equity', label: 'Min equity', type: 'pct', rule: true }
+  ];
+  var LP_HOLD = [
+    { k: 'property_tax_annual', label: 'Property taxes ($ / year)', type: 'money', hold: true },
+    { k: 'insurance_annual', label: "Builder's risk insurance ($ / year)", type: 'money', hold: true },
+    { k: 'utilities_monthly', label: 'Utilities — power, water ($ / month)', type: 'money', hold: true },
+    { k: 'hoa_monthly', label: 'HOA dues ($ / month)', type: 'money', hold: true },
+    { k: 'other_monthly', label: 'Other carry — security, lawn ($ / month)', type: 'money', hold: true },
+    { k: 'draw_fee', label: 'Draw / inspection fee ($ per draw)', type: 'money', hold: true },
+    { k: 'cushion_months', label: 'Cash cushion (months of carry)', type: 'num', hold: true }
   ];
   var LP_CAP = [
     { k: 'num_partners', label: '# capital partners', type: 'num', cap: true },
@@ -957,10 +984,12 @@
   function lpDefault() {
     return {
       name: 'Untitled project', status: 'draft', term_months: 8, interest_rate: 0.095,
-      points_pct: 0.015, admin_fee: 5000, contingency_rate: 0.05, selling_cost_pct: 0.03,
+      points_pct: 0.015, admin_fee: 5000, contingency_rate: 0.05, selling_cost_pct: 0.06,
       escrow_interest: false, purchase_price: 0, closing_costs: 0, arv_per_sf: 0, square_footage: 0,
       rules: { max_ltc: 0.85, max_ltarv: 0.75, min_contingency: 0.05, min_margin: 0.15,
                min_equity: 0.15, max_cost_per_sf: 250, max_line_share: 0.15, max_dumpster: 20000 },
+      holding: { property_tax_annual: 0, insurance_annual: 0, utilities_monthly: 0, hoa_monthly: 0,
+                 other_monthly: 0, draw_fee: 0, cushion_months: 2 },
       capital: { num_partners: 2, capital_per_partner: 300000, ownership_per_capital: 0.125,
                  operating_partners: 3, working_capital: 130000, hold_months: 10 },
       reo: { guarantor: '', section_a: [], section_b: [], section_c: [] },
@@ -983,7 +1012,7 @@
   }
 
   function lpField(f, val) {
-    var attr = f.cap ? 'data-ck="' + f.k + '"' : (f.rule ? 'data-rk="' + f.k + '"' : 'data-k="' + f.k + '"');
+    var attr = f.cap ? 'data-ck="' + f.k + '"' : (f.hold ? 'data-hk="' + f.k + '"' : (f.rule ? 'data-rk="' + f.k + '"' : 'data-k="' + f.k + '"'));
     if (f.type === 'bool') {
       return '<label class="lp-f"><span>' + f.label + '</span><select ' + attr + ' data-t="bool">' +
         '<option value="false"' + (!val ? ' selected' : '') + '>No — pay monthly</option>' +
@@ -1044,11 +1073,14 @@
     var h = '';
     h += '<div class="lp-head"><h3 style="margin:0">Underwriting</h3><span class="pill ' + (o.rulesPass === o.rulesTotal ? 'new' : 'contacted') + '">' + o.rulesPass + '/' + o.rulesTotal + ' checks</span></div>';
     // headline KPIs
+    var term = o.term || 0;
     h += '<div class="lp-kpis">' +
       lpKpi('Total loan', money(o.totalLoan), pct(o.LTC) + ' LTC · ' + pct(o.LTARV) + ' LTARV') +
-      lpKpi('Net profit at sale', money(o.netProfit), pct(o.netMargin) + ' net margin', 'good') +
-      lpKpi('Borrower equity', money(o.equity), pct(o.equityPct) + ' of total cost') +
-      lpKpi('Cash to close', money(o.cashToClose), '+ ' + money(o.interestReserve) + ' interest, monthly') +
+      lpKpi('Net profit at sale', money(o.netProfit), pct(o.netMargin) + ' net margin · after holding costs', o.netProfit >= 0 ? 'good' : 'bad') +
+      lpKpi('Total cash needed', money(o.totalCashNeeded), 'everything out of pocket · ' + money(o.totalCashWithCushion) + ' with cushion', 'hl') +
+      lpKpi('Cash to close', money(o.cashToClose), o.escrow ? 'includes ' + money(o.interestReserve) + ' escrowed interest' : 'interest of ' + money(o.interestReserve) + ' paid monthly over ' + term + ' mo') +
+      lpKpi('Down payment', money(o.downPayment), 'purchase price less lender advance') +
+      lpKpi('Holding costs', money(o.holdingCosts), o.holdingCosts ? money(o.holdMonthly) + '/mo taxes, insurance & utilities' : 'none entered — add under Holding costs') +
       '</div>';
     // leverage gauges
     h += '<div class="lp-sec">Leverage vs. lender caps</div>';
@@ -1059,7 +1091,7 @@
     h += '<div class="lp-kpis">' +
       lpKpi('ARV', money(o.ARV), '$' + Math.round(o.arvPerSf) + ' / SF') +
       lpKpi('Gross profit', money(o.grossProfit), pct(o.grossMargin) + ' of ARV') +
-      lpKpi('Cash-on-cash', pct(o.cashOnCash), 'on borrower equity') +
+      lpKpi('Cash-on-cash', pct(o.cashOnCash), 'on total cash needed') +
       lpKpi('Overrun cushion', pct(o.overrunCushion), 'slack before $0 profit') +
       lpKpi('Break-even sale', money(o.breakEven), 'covers all-in cost') +
       lpKpi('Hard cost / SF', money(o.costPerSf), 'of ' + money(o.hardCost) + ' hard cost') +
@@ -1070,7 +1102,7 @@
       lpKpi('Total project cost', money(o.totalCost), 'all-in') +
       lpKpi('Acquisition advance', money(o.acqAdvance), 'funds at closing') +
       lpKpi('Construction holdback', money(o.holdback), 'drawn over the build') +
-      lpKpi('Down payment', money(o.downPayment), 'borrower at closing') +
+      lpKpi('Borrower equity', money(o.equity), pct(o.equityPct) + ' of total cost') +
       '</div>';
     h += '<div class="lp-donutwrap">' + lpDonut([
         { label: 'Loan', value: o.totalLoan, color: '#3f6f52' },
@@ -1081,6 +1113,51 @@
         legendItem('#c9a24b', 'Borrower equity', money(o.equity)) +
         legendItem('#8C8A85', 'Total project cost', money(o.totalCost)) +
       '</div></div>';
+    // total cash needed
+    var cashRows = [
+      ['Down payment', o.downPayment],
+      ['Closing, title & survey', o.closingCosts],
+      ['Lender points & fees', o.pointsFees],
+      ['Loan interest' + (o.escrow ? ' (escrowed at closing)' : ' (paid monthly)'), o.interestReserve],
+      ['Holding costs', o.holdingCosts]
+    ];
+    h += '<div class="lp-sec">Total cash needed</div><table class="lp-tbl">' +
+      cashRows.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + money(r[1]) + '</td></tr>'; }).join('') +
+      '<tr class="tot"><td>Total cash needed</td><td>' + money(o.totalCashNeeded) + '</td></tr>' +
+      '<tr><td>+ Cushion (' + o.cushionMonths + ' mo of interest + holding)</td><td>' + money(o.cushion) + '</td></tr>' +
+      '<tr class="tot"><td>Recommended cash on hand</td><td>' + money(o.totalCashWithCushion) + '</td></tr></table>';
+    // holding costs
+    var hd = o.holding;
+    h += '<div class="lp-sec">Holding costs · ' + term + '-month term</div>';
+    if (!o.holdingCosts) {
+      h += '<div class="lp-hint">No holding costs entered yet. Add property taxes, insurance and utilities in the <b>Holding costs</b> card so profit and cash needed are complete.</div>';
+    } else {
+      h += '<table class="lp-tbl">' + [
+          ['Property taxes', hd.tax], ["Builder's risk insurance", hd.insurance], ['Utilities', hd.utilities],
+          ['HOA dues', hd.hoa], ['Other carry', hd.other],
+          ['Draw / inspection fees (' + hd.drawsFunded + ' draws × ' + money(hd.drawFee) + ')', hd.drawFees]
+        ].filter(function (r) { return r[1]; }).map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + money(r[1]) + '</td></tr>'; }).join('') +
+        '<tr class="tot"><td>Total holding costs</td><td>' + money(o.holdingCosts) + '</td></tr></table>';
+    }
+    // monthly carry
+    if (o.monthly.length) {
+      var avg = o.monthly.reduce(function (a, m) { return a + m.total; }, 0) / o.monthly.length;
+      var last = o.monthly[o.monthly.length - 1];
+      h += '<div class="lp-sec">Monthly carry</div>' +
+        '<div class="lp-sub">Interest grows as construction draws are funded. Average <b>' + money(avg) + '/mo</b>, peaking near <b>' + money(last.total) + '/mo</b>.</div>' +
+        '<div class="tablescroll"><table class="lp-tbl lp-tbl4"><thead><tr><th>Month</th><th>Loan balance</th><th>Interest</th><th>Holding</th><th>Total</th></tr></thead><tbody>' +
+        o.monthly.map(function (m) {
+          return '<tr><td>' + m.month + '</td><td>' + money(m.balance) + '</td><td>' + money(m.interest) + '</td><td>' + money(m.holding) + '</td><td><b>' + money(m.total) + '</b></td></tr>';
+        }).join('') + '</tbody></table></div>';
+    }
+    // schedule overrun
+    h += '<div class="lp-sec">If the build runs long</div>' +
+      '<div class="lp-sub">Each extra month adds full-balance interest (' + money(o.fullInterestMonthly) + ') plus holding (' + money(o.holdMonthly) + ').</div>' +
+      '<div class="tablescroll"><table class="lp-tbl lp-tbl4"><thead><tr><th>Delay</th><th>Extra cash</th><th>Net profit</th><th>Margin</th></tr></thead><tbody>' +
+      '<tr><td>On schedule</td><td>—</td><td>' + money(o.netProfit) + '</td><td>' + pct(o.netMargin) + '</td></tr>' +
+      o.overrun.map(function (r) {
+        return '<tr' + (r.netProfit < 0 ? ' class="neg"' : '') + '><td>+' + r.months + ' mo</td><td>' + money(r.extraCash) + '</td><td>' + money(r.netProfit) + '</td><td>' + pct(r.netMargin) + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
     // draw schedule bar chart
     h += '<div class="lp-sec">Draw schedule</div><div class="lp-draws">' + draws + '</div>';
     // balance ribbon
@@ -1123,7 +1200,7 @@
     h += '<div class="lp-head"><h3 style="margin:0">Capital Partners</h3><span class="pill ' + (c.surplus >= 0 ? 'new' : 'contacted') + '">' + (c.surplus >= 0 ? 'Funded' : 'Short') + '</span></div>';
     h += '<div class="lp-kpis">' +
       lpKpi('Capital raised', money(c.raised), c.np + ' × ' + money(c.cpp)) +
-      lpKpi('Total cash need', money(c.cashNeed), 'equity + working capital') +
+      lpKpi('Total cash need', money(c.cashNeed), 'equity + holding + working capital') +
       lpKpi('Reserve / surplus', money(c.surplus), 'cushion after the deal', c.surplus >= 0 ? 'good' : '') +
       lpKpi('Return on capital', pct(c.roc), pct(c.annual) + ' annualized', 'good') +
       '</div>';
@@ -1382,6 +1459,8 @@
     $('#lp-prop').innerHTML = LP_PROP.map(function (f) { return lpField(f, p[f.k]); }).join('');
     $('#lp-in').innerHTML = LP_IN.map(function (f) { return lpField(f, p[f.k]); }).join('') +
       LP_RULES.map(function (f) { return lpField(f, (p.rules || {})[f.k]); }).join('');
+    var hv = p.holding || {};
+    $('#lp-hold').innerHTML = LP_HOLD.map(function (f) { return lpField(f, f.k === 'cushion_months' && hv[f.k] == null ? 2 : hv[f.k]); }).join('');
     $('#lp-cap').innerHTML = LP_CAP.map(function (f) { return lpField(f, (p.capital || {})[f.k]); }).join('');
     lpRenderBudget();
     lpRenderReo();
@@ -1404,6 +1483,7 @@
     if (!current) return;
     if (el.hasAttribute('data-k')) { current.project[el.getAttribute('data-k')] = lpConv(el); current.dirty = true; lpRecompute(); }
     else if (el.hasAttribute('data-rk')) { (current.project.rules = current.project.rules || {})[el.getAttribute('data-rk')] = lpConv(el); current.dirty = true; lpRecompute(); }
+    else if (el.hasAttribute('data-hk')) { (current.project.holding = current.project.holding || {})[el.getAttribute('data-hk')] = lpConv(el); current.dirty = true; lpRecompute(); }
     else if (el.hasAttribute('data-ck')) { (current.project.capital = current.project.capital || {})[el.getAttribute('data-ck')] = lpConv(el); current.dirty = true; lpRecompute(); }
     else if (el.id === 'lp-reo-guarantor') { (current.project.reo = current.project.reo || {}).guarantor = el.value; current.dirty = true; }
     else if (el.hasAttribute('data-gp')) {
@@ -1426,7 +1506,7 @@
     var keys = ['name', 'status', 'address', 'borrower', 'scope', 'square_footage', 'stories',
       'beds_baths', 'lot_size', 'term_months', 'start_date', 'completion_date', 'purchase_price',
       'closing_costs', 'arv_per_sf', 'interest_rate', 'points_pct', 'admin_fee', 'contingency_rate',
-      'selling_cost_pct', 'escrow_interest', 'rules', 'capital', 'documents', 'reo', 'lenders', 'notes'];
+      'selling_cost_pct', 'escrow_interest', 'rules', 'holding', 'capital', 'documents', 'reo', 'lenders', 'notes'];
     var o = {};
     keys.forEach(function (k) { if (p[k] !== undefined) o[k] = p[k]; });
     ['square_footage', 'stories', 'term_months', 'purchase_price', 'closing_costs', 'arv_per_sf',

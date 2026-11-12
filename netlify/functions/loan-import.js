@@ -213,7 +213,7 @@ function buildProjectPayload(name, parsed) {
     points_pct: f.points_pct || 0.015,
     admin_fee: 5000,
     contingency_rate: f.contingency_rate || 0.05,
-    selling_cost_pct: f.selling_cost_pct || 0.03,
+    selling_cost_pct: f.selling_cost_pct || 0.06,
     escrow_interest: false,
     notes: 'Imported from an uploaded workbook — review the highlighted inputs.'
   };

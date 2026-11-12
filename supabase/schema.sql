@@ -383,7 +383,7 @@ create table if not exists public.projects (
   points_pct       numeric not null default 0.015,
   admin_fee        numeric not null default 5000,
   contingency_rate numeric not null default 0.05,
-  selling_cost_pct numeric not null default 0.03,
+  selling_cost_pct numeric not null default 0.06,
   escrow_interest  boolean not null default false,  -- false = borrower pays interest monthly
   -- underwriting thresholds (editable per project)
   rules            jsonb not null default '{
@@ -406,6 +406,13 @@ create table if not exists public.projects (
 );
 -- Idempotent upgrade for projects created before lender-linking shipped.
 alter table public.projects add column if not exists lenders jsonb not null default '[]'::jsonb;
+-- Holding / carrying costs paid out of pocket during the build (powers
+-- Holding costs, Total cash needed, Monthly carry and overrun scenarios):
+-- { property_tax_annual, insurance_annual, utilities_monthly, hoa_monthly,
+--   other_monthly, draw_fee, cushion_months }
+alter table public.projects add column if not exists holding jsonb not null default '{}'::jsonb;
+-- Texas agent commissions + seller closing costs run ~5-7% of sale price.
+alter table public.projects alter column selling_cost_pct set default 0.06;
 create index if not exists projects_created_idx on public.projects(created_at desc);
 
 drop trigger if exists projects_touch_updated on public.projects;
