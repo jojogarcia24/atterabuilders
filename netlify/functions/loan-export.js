@@ -273,17 +273,45 @@ function sheetLoanSummary(wb, p, o) {
   kv(ws, r++, 2, 'Borrower Down Payment', 3, o.downPayment, MONEY, { bold: true });
   kv(ws, r++, 2, 'Plus: Lender Points, Origination & Fees', 3, o.pointsFees, MONEY);
   kv(ws, r++, 2, 'Plus: Title, Escrow, Survey & Prepaids', 3, p.closing_costs, MONEY);
+  if (o.escrow) kv(ws, r++, 2, 'Plus: Interest Reserve Escrowed at Closing', 3, o.interestReserve, MONEY);
   kv(ws, r++, 2, 'Estimated Cash to Close', 3, o.cashToClose, MONEY, { bold: true, top: true });
-  kv(ws, r++, 2, 'Plus: Interest paid monthly over build', 3, o.interestReserve, MONEY);
+  if (!o.escrow) kv(ws, r++, 2, 'Plus: Interest paid monthly over build', 3, o.interestReserve, MONEY);
   kv(ws, r++, 2, 'Total Borrower Cash into the Deal', 3, o.totalCashIn, MONEY, { bold: true, top: true });
+  r++;
+  band(ws, r, 2, 3, 'HOLDING COSTS (' + (o.term || 0) + '-MONTH TERM)'); r++;
+  kv(ws, r++, 2, 'Property taxes', 3, o.holding.tax, MONEY);
+  kv(ws, r++, 2, "Builder's risk insurance", 3, o.holding.insurance, MONEY);
+  kv(ws, r++, 2, 'Utilities', 3, o.holding.utilities, MONEY);
+  kv(ws, r++, 2, 'HOA dues', 3, o.holding.hoa, MONEY);
+  kv(ws, r++, 2, 'Other carry', 3, o.holding.other, MONEY);
+  kv(ws, r++, 2, 'Draw / inspection fees (' + o.holding.drawsFunded + ' draws)', 3, o.holding.drawFees, MONEY);
+  kv(ws, r++, 2, 'Total holding costs', 3, o.holdingCosts, MONEY, { bold: true, top: true });
+  r++;
+  band(ws, r, 2, 3, 'TOTAL CASH NEEDED'); r++;
+  kv(ws, r++, 2, 'Borrower cash into the deal (above)', 3, o.totalCashIn, MONEY);
+  kv(ws, r++, 2, 'Plus: Holding costs', 3, o.holdingCosts, MONEY);
+  kv(ws, r++, 2, 'Total Cash Needed', 3, o.totalCashNeeded, MONEY, { bold: true, top: true });
+  kv(ws, r++, 2, 'Plus: Cushion (' + o.cushionMonths + ' months of interest + holding)', 3, o.cushion, MONEY);
+  kv(ws, r++, 2, 'Recommended Cash on Hand', 3, o.totalCashWithCushion, MONEY, { bold: true, top: true });
   r++;
   band(ws, r, 2, 3, 'EXIT MATH'); r++;
   kv(ws, r, 2, 'Selling costs as % of ARV', 3, o.sellPct, PCT); inputV(ws, r, 3); r++;
   kv(ws, r++, 2, 'Estimated selling costs', 3, o.sellingCosts, MONEY);
-  kv(ws, r++, 2, 'Net profit after sale', 3, o.netProfit, MONEY, { bold: true });
+  kv(ws, r++, 2, 'Holding costs', 3, o.holdingCosts, MONEY);
+  kv(ws, r++, 2, 'Net profit after sale & holding', 3, o.netProfit, MONEY, { bold: true });
   kv(ws, r++, 2, 'Net margin on ARV', 3, o.netMargin, PCT);
-  kv(ws, r++, 2, 'Cash-on-cash return on equity', 3, o.cashOnCash, PCT);
+  kv(ws, r++, 2, 'Cash-on-cash return on total cash needed', 3, o.cashOnCash, PCT);
   kv(ws, r++, 2, 'Break-even sale price', 3, o.breakEven, MONEY);
+  r++;
+  band(ws, r, 2, 3, 'IF THE BUILD RUNS LONG'); r++;
+  o.overrun.forEach(function (x) {
+    kv(ws, r++, 2, '+' + x.months + ' month' + (x.months > 1 ? 's' : '') + ' — extra cash ' + Math.round(x.extraCash).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }) + ' · net profit', 3, x.netProfit, MONEY);
+  });
+  r++;
+  band(ws, r, 2, 3, 'MONTHLY CARRY (INTEREST + HOLDING)'); r++;
+  o.monthly.forEach(function (m) {
+    kv(ws, r++, 2, 'Month ' + m.month + ' — interest ' + Math.round(m.interest).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }) + ' + holding', 3, m.total, MONEY);
+  });
   r++;
   put(ws, r, 2, 'Legend:  yellow = input cell.  All other figures are calculated from the project data.', { size: 9, color: T.gray, italic: true });
 }
@@ -509,6 +537,7 @@ function buildFormulaWorkbook(p, lines, o, cap) {
   wb.creator = 'Aterra Builders';
   const lsSheet = wb.addWorksheet('Loan Summary', { views: [{ showGridLines: false }] });
   const bud = fbBudget(wb, p, lines);
+  bud.drawsFunded = (o && o.holding) ? o.holding.drawsFunded : 0;
   fbLoanSummary(lsSheet, p, bud);
   fbDraws(wb, bud);
   fbRules(wb);
@@ -575,7 +604,7 @@ function fbLoanSummary(ws, p, bud) {
     [10, 'Lender points (% of loan)', num(p.points_pct) || 0.015, PCT],
     [11, 'Admin / doc / processing fee', num(p.admin_fee) || 5000, MONEY],
     [12, 'Contingency rate', num(p.contingency_rate) || 0.05, PCT],
-    [13, 'Selling cost (% of ARV)', num(p.selling_cost_pct) || 0.03, PCT],
+    [13, 'Selling cost (% of ARV)', num(p.selling_cost_pct) || 0.06, PCT],
     [14, 'Max Loan-to-Cost', num(rules.max_ltc) || 0.85, PCT],
     [15, 'Max Loan-to-ARV', num(rules.max_ltarv) || 0.75, PCT],
     [16, 'Min gross margin', num(rules.min_margin) || 0.15, PCT],
@@ -592,7 +621,7 @@ function fbLoanSummary(ws, p, bud) {
     [25, 'Acquisition advance', 'MIN( ( C14*( (C5+C6+C21+C22) + C10*C23 + C11 + 0.5*(C8*C9/12)*C23 ) - C23 ) / ( 1 - C14*(C10 + (C8*C9/12)) ), C15*C24 - C23 )', MONEY, false],
     [26, 'Total loan amount', 'C25+C23', MONEY, true],
     [27, 'Average outstanding balance', 'C25+0.5*C23', MONEY, false],
-    [28, 'Interest reserve (paid monthly)', 'C8*(C9/12)*C27', MONEY, false],
+    [28, 'Interest reserve', 'C8*(C9/12)*C27', MONEY, false],
     [29, 'Lender points & fees', 'C10*C26+C11', MONEY, false],
     [30, 'Total project cost', 'C5+C6+C21+C22+C28+C29', MONEY, true],
     [31, 'Borrower equity', 'C30-C26', MONEY, false],
@@ -602,17 +631,38 @@ function fbLoanSummary(ws, p, bud) {
     [35, 'Gross profit', 'C24-C30', MONEY, false],
     [36, 'Gross margin on ARV', 'C35/C24', PCT, false],
     [37, 'Selling costs', 'C24*C13', MONEY, false],
-    [38, 'Net profit after sale', 'C35-C37', MONEY, true],
+    [38, 'Net profit after sale & holding', 'C35-C37-C59', MONEY, true],
     [39, 'Net margin on ARV', 'C38/C24', PCT, false],
-    [40, 'Cash-on-cash return', 'C38/C31', PCT, false],
+    [40, 'Cash-on-cash return (on total cash needed)', 'IFERROR(C38/C60,0)', PCT, false],
     [41, 'Down payment', 'C5-C25', MONEY, false],
-    [42, 'Cash to close', 'C41+C29+C6', MONEY, false],
-    [43, 'Total cash into the deal', 'C42+C28', MONEY, true],
-    [44, 'Break-even sale price', 'C30/(1-C13)', MONEY, false],
+    [42, 'Cash to close', 'C41+C29+C6+IF(C57="Yes",C28,0)', MONEY, false],
+    [43, 'Total cash into the deal', 'C42+IF(C57="Yes",0,C28)', MONEY, true],
+    [44, 'Break-even sale price', '(C30+C59)/(1-C13)', MONEY, false],
     [45, 'Hard cost per SF', 'C21/C4', MONEY2, false]
   ];
   D.forEach(function (row) { put(ws, row[0], 2, row[1], { size: 10, bold: !!row[4] }); putF(ws, row[0], 3, row[2], { fmt: row[3], bold: !!row[4] }); });
-  put(ws, 47, 2, 'Legend: yellow = editable input. Change any yellow cell and the workbook recalculates.', { size: 9, italic: true, color: T.gray });
+  const hold = p.holding || {};
+  const drawsFunded = (bud.drawsFunded || 0);
+  band(ws, 47, 2, 3, 'HOLDING COSTS & CASH NEEDED', { fill: T.navy2, size: 12 });
+  [
+    [48, 'Property taxes ($ / year)', num(hold.property_tax_annual), MONEY],
+    [49, "Builder's risk insurance ($ / year)", num(hold.insurance_annual), MONEY],
+    [50, 'Utilities ($ / month)', num(hold.utilities_monthly), MONEY],
+    [51, 'HOA dues ($ / month)', num(hold.hoa_monthly), MONEY],
+    [52, 'Other carry ($ / month)', num(hold.other_monthly), MONEY],
+    [53, 'Draw / inspection fee ($ per draw)', num(hold.draw_fee), MONEY],
+    [54, 'Draws funded', drawsFunded, '0'],
+    [55, 'Cash cushion (months)', hold.cushion_months == null ? 2 : num(hold.cushion_months), '0'],
+    [57, 'Escrow interest at closing? (Yes / No)', p.escrow_interest ? 'Yes' : 'No', '@']
+  ].forEach(function (row) { put(ws, row[0], 2, row[1], { size: 10 }); putInput(ws, row[0], 3, row[2], row[3]); });
+  [
+    [56, 'Holding cost per month', 'C48/12+C49/12+C50+C51+C52', MONEY, false],
+    [59, 'Total holding costs', 'C56*C9+C53*C54', MONEY, true],
+    [60, 'Total cash needed', 'C43+C59', MONEY, true],
+    [61, 'Cushion (months × interest at full balance + holding)', 'C55*(C8/12*C26+C56)', MONEY, false],
+    [62, 'Recommended cash on hand', 'C60+C61', MONEY, true]
+  ].forEach(function (row) { put(ws, row[0], 2, row[1], { size: 10, bold: !!row[4] }); putF(ws, row[0], 3, row[2], { fmt: row[3], bold: !!row[4] }); });
+  put(ws, 64, 2, 'Legend: yellow = editable input. Change any yellow cell and the workbook recalculates.', { size: 9, italic: true, color: T.gray });
 }
 
 function fbDraws(wb, bud) {

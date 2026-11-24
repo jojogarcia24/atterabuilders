@@ -34,6 +34,16 @@
     var sellPct     = num(project.selling_cost_pct, 0.03);   // C96
     var escrow      = !!project.escrow_interest;             // C125 = "No" when false
 
+    // holding / carrying costs the borrower pays out of pocket (not loan-funded)
+    var hold        = project.holding || {};
+    var taxAnnual   = num(hold.property_tax_annual);
+    var insAnnual   = num(hold.insurance_annual);
+    var utilMonthly = num(hold.utilities_monthly);
+    var hoaMonthly  = num(hold.hoa_monthly);
+    var otherMonthly= num(hold.other_monthly);
+    var drawFee     = num(hold.draw_fee);
+    var cushionMos  = num(hold.cushion_months, 2);
+
     var maxLTC      = num(rules.max_ltc, 0.85);              // Rules C8
     var maxLTARV    = num(rules.max_ltarv, 0.75);            // Rules C9
     var minCont     = num(rules.min_contingency, 0.05);
@@ -94,18 +104,36 @@
 
     // ---- closing table ----------------------------------------------------
     var downPayment  = purchase - acqAdvance;               // C70
-    var cashToClose  = downPayment + pointsFees + closing;  // C74 (reserve NOT escrowed)
+    // escrowed: the whole interest reserve is collected at closing;
+    // not escrowed: the borrower pays interest monthly as the loan is drawn
+    var cashToClose  = downPayment + pointsFees + closing + (escrow ? interestReserve : 0); // C74
+    var interestMonthlyPaid = escrow ? 0 : interestReserve;
     // total cash into the deal reconciles to equity whether or not escrowed
-    var totalCashIn  = cashToClose + interestReserve;       // = equity
+    var totalCashIn  = cashToClose + interestMonthlyPaid;   // = equity
+
+    // ---- holding costs ----------------------------------------------------
+    var drawsFunded    = draws.filter(function (d) { return d > 0; }).length;
+    var taxCost        = taxAnnual / 12 * term;
+    var insCost        = insAnnual / 12 * term;
+    var utilCost       = utilMonthly * term;
+    var hoaCost        = hoaMonthly * term;
+    var otherCost      = otherMonthly * term;
+    var drawFees       = drawFee * drawsFunded;
+    var holdMonthly    = taxAnnual / 12 + insAnnual / 12 + utilMonthly + hoaMonthly + otherMonthly;
+    var holdingCosts   = taxCost + insCost + utilCost + hoaCost + otherCost + drawFees;
+    var fullInterestMo = rate / 12 * totalLoan;             // interest per month once fully drawn
+    var cushion        = cushionMos * (holdMonthly + fullInterestMo);
+    var totalCashNeeded = totalCashIn + holdingCosts;       // every dollar out of pocket
+    var allInCost      = totalCost + holdingCosts;
 
     // ---- profit & exit ----------------------------------------------------
     var grossProfit  = ARV - totalCost;                     // C47
     var grossMargin  = ARV ? grossProfit / ARV : 0;         // C48
     var sellingCosts = ARV * sellPct;                       // C97
-    var netProfit    = grossProfit - sellingCosts;          // C99
+    var netProfit    = grossProfit - sellingCosts - holdingCosts; // C99 less carry
     var netMargin    = ARV ? netProfit / ARV : 0;           // C100
-    var cashOnCash   = equity ? netProfit / equity : 0;     // C101
-    var breakEven    = (1 - sellPct) ? totalCost / (1 - sellPct) : 0;
+    var cashOnCash   = totalCashNeeded ? netProfit / totalCashNeeded : 0; // on all cash in
+    var breakEven    = (1 - sellPct) ? allInCost / (1 - sellPct) : 0;
     var overrunCush  = (hardCost + contingency) ? netProfit / (hardCost + contingency) : 0; // C102
 
     // ---- leverage test ----------------------------------------------------
@@ -124,6 +152,24 @@
       cum += amt;
       return { n: i + 1, amount: amt, cumulative: cum, pct: hardCost ? amt / hardCost : 0,
                cumPct: hardCost ? cum / hardCost : 0 };
+    });
+
+    // ---- monthly carry (acquisition funded day 1, holdback drawn evenly) --
+    // interest sums exactly to interestReserve over the term
+    var monthly = [];
+    var nMonths = Math.max(0, Math.min(60, Math.round(term)));
+    for (var mi = 1; mi <= nMonths; mi++) {
+      var bal = acqAdvance + holdback * (mi - 0.5) / term;
+      var intr = rate / 12 * bal;
+      monthly.push({ month: mi, balance: bal, interest: intr, holding: holdMonthly, total: intr + holdMonthly });
+    }
+
+    // ---- schedule overrun: build runs long, loan fully drawn --------------
+    var overrun = [1, 2, 3, 6].map(function (m) {
+      var extraInt = fullInterestMo * m, extraHold = holdMonthly * m;
+      var np = netProfit - extraInt - extraHold;
+      return { months: m, extraInterest: extraInt, extraHolding: extraHold, extraCash: extraInt + extraHold,
+               netProfit: np, netMargin: ARV ? np / ARV : 0 };
     });
 
     // ---- rules & thresholds (mirror of the Rules tab) ---------------------
@@ -159,7 +205,13 @@
       interestReserve: interestReserve, pointsFees: pointsFees, avgBalance: avgBalance,
       totalCost: totalCost, equity: equity, equityPct: equityPct, LTC: LTC, LTARV: LTARV,
       downPayment: downPayment, cashToClose: cashToClose, totalCashIn: totalCashIn,
-      escrow: escrow,
+      escrow: escrow, interestMonthlyPaid: interestMonthlyPaid, closingCosts: closing,
+      holding: { tax: taxCost, insurance: insCost, utilities: utilCost, hoa: hoaCost, other: otherCost,
+                 drawFees: drawFees, drawsFunded: drawsFunded, drawFee: drawFee },
+      holdingCosts: holdingCosts, holdMonthly: holdMonthly, fullInterestMonthly: fullInterestMo,
+      cushion: cushion, cushionMonths: cushionMos, totalCashNeeded: totalCashNeeded,
+      totalCashWithCushion: totalCashNeeded + cushion, allInCost: allInCost,
+      monthly: monthly, overrun: overrun, term: term,
       grossProfit: grossProfit, grossMargin: grossMargin, sellingCosts: sellingCosts,
       netProfit: netProfit, netMargin: netMargin, cashOnCash: cashOnCash,
       breakEven: breakEven, overrunCushion: overrunCush,
@@ -180,7 +232,7 @@
         wc = num(c.working_capital, 130000), hold = num(c.hold_months, 10),
         ownEach = num(c.ownership_per_capital, 0.125), ops = num(c.operating_partners, 3);
     var raised = np * cpp;
-    var cashNeed = o.equity + wc;                 // partnership funds equity + draw float
+    var cashNeed = o.equity + (o.holdingCosts || 0) + wc; // equity + carry + draw float
     var capOwnTotal = np * ownEach;
     var opOwnTotal = 1 - capOwnTotal;
     var opEach = ops > 0 ? opOwnTotal / ops : 0;
@@ -189,7 +241,7 @@
     var factors = [1.05, 1.0, 0.95, 0.90, 0.85];
     var downside = factors.map(function (f) {
       var psf = o.arvPerSf * f;
-      var netP = (psf * o.SF) * (1 - o.sellPct) - o.totalCost;
+      var netP = (psf * o.SF) * (1 - o.sellPct) - o.totalCost - (o.holdingCosts || 0);
       return { psf: psf, sale: psf * o.SF, netProfit: netP,
                perCapital: netP * ownEach, roc: cpp ? (netP * ownEach) / cpp : 0, base: f === 1.0 };
     });
